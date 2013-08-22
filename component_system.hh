@@ -1,4 +1,4 @@
-// #include <type_traits>
+
 #include "component.hh"
 
 #ifndef _SCRATCH_COMPONENT_SYSTEM
@@ -59,8 +59,9 @@ struct ComponentSystem
   public:
     using EntityID = typename Entity::Ident;
 
-    /** Create entity */
-    // does this even need to be aware of a specific system?
+    /** Creates entities
+     *  Needs: an input source.
+     */
     template <class... Cs>
     struct Spawn
         : Operation
