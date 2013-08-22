@@ -65,7 +65,7 @@ namespace util
             >::type;
     };
 
-    // /** Transform a parameter pack */
+    // /** Transform a variadic template */
     template <template <class> class, class> struct transform;
     template <template <class> class How,
               template <class...> class Variadic, class... Ts>
@@ -122,9 +122,9 @@ int main() {
                   std::tuple<int, long> >::value, "");
 
     static_assert(std::is_same<
-                  filter<std::is_floating_point, std::tuple,
-                  int, float, long, double>::type,
-                  std::tuple<float, double> >::value, "");
+                  transform<std::add_pointer,
+                  std::tuple<int, float, char *> >::type,
+                  std::tuple<int *, float *, char **> >::value, "");
 }
 #endif
 
