@@ -9,8 +9,8 @@ namespace util
     /* ∀ T ∈ Ts where Pred<T> */
     template <template <class> class, class...>
     struct all_satisfy;
-    template <template <class> class Pred, class T>
-    struct all_satisfy<Pred, T> : Pred<T>
+    template <template <class> class Pred>
+    struct all_satisfy<Pred> : std::true_type
     {};
     template <template <class> class Pred, class T, class... Ts>
     struct all_satisfy<Pred, T, Ts...>
@@ -23,8 +23,8 @@ namespace util
     /* ∃ T ∈ Ts where Pred<T> */
     template <template <class> class, class...>
     struct any_satisfy;
-    template <template <class> class Pred, class T>
-    struct any_satisfy<Pred, T> : Pred<T>
+    template <template <class> class Pred>
+    struct any_satisfy<Pred> : std::false_type
     {};
     template <template <class> class Pred, class T, class... Ts>
     struct any_satisfy<Pred, T, Ts...>
@@ -42,26 +42,26 @@ namespace util
     };
 
     /** Filter a parameter pack */    
-    template <template <class> class,
-              template <class...> class,
-              class...>
+    template <template <class> class, class>
+              // template <class...> class,
+              // class...>
     struct filter;
     template <template <class> class Pred, template <class...> class Variadic>
-    struct filter<Pred, Variadic> { using type = Variadic<>; };
+    struct filter<Pred, Variadic<> > { using type = Variadic<>; };
     template <template <class> class Pred,
               template <class...> class Variadic,
               class T, class... Ts>
-    struct filter<Pred, Variadic, T, Ts...>
+    struct filter<Pred, Variadic<T, Ts...> >
     {
         template <class, class> struct Cons;
         template <class Head, class... Tail>
-        struct Cons<Head, Variadic<Tail...>>
+        struct Cons<Head, Variadic<Tail...> >
         { using type = Variadic<Head, Tail...>; };
         
         using type = typename std::conditional<
             Pred<T>::value,
-            typename Cons<T, typename filter<Pred, Variadic, Ts...>::type>::type,
-            typename filter<Pred, Variadic, Ts...>::type
+            typename Cons<T, typename filter<Pred, Variadic<Ts...> >::type>::type,
+            typename filter<Pred, Variadic<Ts...> >::type
             >::type;
     };
 
@@ -118,7 +118,7 @@ int main() {
     static_assert(!is_member<int, double, long, float>::value, "");
     
     static_assert(std::is_same<
-                  filter<std::is_integral, std::tuple, int, float, long>::type,
+                  filter<std::is_integral, std::tuple<int, float, long> >::type,
                   std::tuple<int, long> >::value, "");
 
     static_assert(std::is_same<
