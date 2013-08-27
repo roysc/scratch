@@ -72,7 +72,7 @@ namespace util
     struct transform<How, Variadic<Ts...>>
     { using type = Variadic<typename How<Ts>::type...>; };
     
-    /** Enable lookup by type - will be included in std::get in C++14 */
+    /** Enable lookup by type (will be in std::get by C++14) */
     template <class, class...> struct _index_of;
     template <class T, class... Ts>
     struct _index_of<T, T, Ts...> : std::integral_constant<int, 0>
@@ -86,10 +86,10 @@ namespace util
     template <class... Ts>
     struct TypeVector : std::tuple<Ts...>
     {
-        template <class T> T& get() {
+        template <class T> T&& get() {
             return std::get<_index_of<T>::value>(*this);
         }
-        template <class T> void set(T& a) {
+        template <class T> void set(T&& a) {
             std::get<_index_of<T>::value>(*this) = a;
         }
     };
@@ -103,29 +103,28 @@ namespace util
 int f(int) { return 1; }
 void g() {}
 
-int main() {
-    using namespace util;
+using namespace util;
     
-    // static_assert(false, "working?");
-    static_assert(any_satisfy<std::is_integral, int, float>::value, "");
-    static_assert(!any_satisfy<std::is_integral, double, float>::value, "");
+// static_assert(false, "working?");
+static_assert(any_satisfy<std::is_integral, int, float>::value, "");
+static_assert(!any_satisfy<std::is_integral, double, float>::value, "");
     
-    static_assert(all_satisfy<std::is_integral, int, long, unsigned>::value, "");
-    static_assert(!all_satisfy<std::is_integral, int, float>::value, "");
-    static_assert(all_satisfy<std::is_function, decltype(f), decltype(g)>::value, "");
+static_assert(all_satisfy<std::is_integral, int, long, unsigned>::value, "");
+static_assert(!all_satisfy<std::is_integral, int, float>::value, "");
+static_assert(all_satisfy<std::is_function, decltype(f), decltype(g)>::value, "");
 
-    static_assert(is_member<int, long, char, int>::value, "");
-    static_assert(!is_member<int, double, long, float>::value, "");
+static_assert(is_member<int, long, char, int>::value, "");
+static_assert(!is_member<int, double, long, float>::value, "");
     
-    static_assert(std::is_same<
-                  filter<std::is_integral, std::tuple<int, float, long> >::type,
-                  std::tuple<int, long> >::value, "");
+static_assert(std::is_same<
+              filter<std::is_integral, std::tuple<int, float, long> >::type,
+              std::tuple<int, long> >::value, "");
 
-    static_assert(std::is_same<
-                  transform<std::add_pointer,
-                  std::tuple<int, float, char *> >::type,
-                  std::tuple<int *, float *, char **> >::value, "");
-}
+static_assert(std::is_same<
+              transform<std::add_pointer,
+              std::tuple<int, float, char *> >::type,
+              std::tuple<int *, float *, char **> >::value, "");
+
 #endif
 
 #endif

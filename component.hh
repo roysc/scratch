@@ -14,20 +14,18 @@ struct Component
     static const Ident ID = 0;
 };
 
+template <class C>
+struct Facade
+{
+    
+};
+
 /** The Component trait, or contract.
  *      . must inherit from Component
- *      X must have a ::Facade struct // instead, select those needing one?
- *      . ?
  */
 template <class C>
-struct has_Facade : std::integral_constant<
-    decltype(typename C::Facade(), bool()),
-    true>
-{};
-
-template <class C>
 struct is_Component
-    : std::is_base_of<Component, C>
+    : public std::is_base_of<Component, C>
     // , std::enable_if<has_Facade<C>::value>
 {};
 
@@ -36,18 +34,13 @@ struct is_Component
  */
 template <class... Cpts>
 struct ComponentIndex
-    : std::enable_if<util::all_satisfy<is_Component, Cpts...>::value>
+    : public std::enable_if<util::all_satisfy<is_Component, Cpts...>::value>
 {
     template <class C> struct _facade_ptr
     { using type = typename std::add_pointer<typename C::Facade>; };
     
     using Components = typename
         util::TypeVector<std::add_pointer<Cpts>...>;
-    using Facades    = typename
-        util::transform<_facade_ptr, typename
-                        util::filter<has_Facade,
-                                     util::TypeVector<Cpts...>
-                                     >::type>::type;
     
     /* Type predicates */
     /** Whether this ComponentIndex supports a given Component */
@@ -61,12 +54,9 @@ struct ComponentIndex
 
 #ifdef _BUILD_TEST
 
-struct C : Component { struct Facade {}; };
+ComponentIndex<C, CF> cix;
+// static_assert(, "");
 
-void test() {
-    ComponentIndex<C> cix;
-    // static_assert(, "");
-}
 #endif
 
 #endif
