@@ -1,8 +1,8 @@
 #include <type_traits>
 #include <tuple>
 
-#ifndef _SCRATCH_UTIL
-#define _SCRATCH_UTIL
+#ifndef _SCRATCH_UTIL_
+#define _SCRATCH_UTIL_
 
 namespace util
 {
@@ -10,11 +10,11 @@ namespace util
     template <template <class> class, class...>
     struct all_satisfy;
     template <template <class> class Pred>
-    struct all_satisfy<Pred> : std::true_type
+    struct all_satisfy<Pred> : public std::true_type
     {};
     template <template <class> class Pred, class T, class... Ts>
     struct all_satisfy<Pred, T, Ts...>
-        : std::conditional<Pred<T>::value,
+        : public std::conditional<Pred<T>::value,
                            all_satisfy<Pred, Ts...>,
                            std::false_type>::type
     {};
@@ -24,11 +24,11 @@ namespace util
     template <template <class> class, class...>
     struct any_satisfy;
     template <template <class> class Pred>
-    struct any_satisfy<Pred> : std::false_type
+    struct any_satisfy<Pred> : public std::false_type
     {};
     template <template <class> class Pred, class T, class... Ts>
     struct any_satisfy<Pred, T, Ts...>
-        : std::conditional<Pred<T>::value,
+        : public std::conditional<Pred<T>::value,
                            std::true_type,
                            any_satisfy<Pred, Ts...> >::type
     {};
@@ -37,7 +37,7 @@ namespace util
     template <class T, class... Ts>
     struct is_member
     {
-        template <class T_> struct predicate : std::is_same<T, T_> {};
+        template <class T_> struct predicate : public std::is_same<T, T_> {};
         static constexpr bool value = any_satisfy<predicate, Ts...>::value;
     };
 
@@ -75,16 +75,17 @@ namespace util
     /** Enable lookup by type (will be in std::get by C++14) */
     template <class, class...> struct _index_of;
     template <class T, class... Ts>
-    struct _index_of<T, T, Ts...> : std::integral_constant<int, 0>
+    struct _index_of<T, T, Ts...>
+        : public std::integral_constant<int, 0>
     {};
     template <class T, class U, class... Ts>
     struct _index_of<T, U, Ts...>
-        : std::integral_constant<int, 1 + _index_of<T, Ts...>::value>
+        : public std::integral_constant<int, 1 + _index_of<T, Ts...>::value>
     {};
 
     /** A tuple with indexing by type */
     template <class... Ts>
-    struct TypeVector : std::tuple<Ts...>
+    struct TypeVector : private std::tuple<Ts...>
     {
         template <class T> T&& get() {
             return std::get<_index_of<T>::value>(*this);
@@ -122,8 +123,8 @@ static_assert(std::is_same<
 
 static_assert(std::is_same<
               transform<std::add_pointer,
-              std::tuple<int, float, char *> >::type,
-              std::tuple<int *, float *, char **> >::value, "");
+              std::tuple<int, float, char*> >::type,
+              std::tuple<int*, float*, char**> >::value, "");
 
 #endif
 

@@ -1,8 +1,19 @@
 
 #include "component.hh"
 
-#ifndef _SCRATCH_COMPONENT_SYSTEM
-#define _SCRATCH_COMPONENT_SYSTEM
+#ifndef _SCRATCH_COMPONENT_SYSTEM_
+#define _SCRATCH_COMPONENT_SYSTEM_
+
+
+template <class CIx>
+/** Anything that "exists" within the system */
+struct Entity
+{
+    using CIx::Components::get;
+    // using CIx::Components::set;
+    
+};
+
 
 /**
  * Represents a system which can handle the specified components.
@@ -11,73 +22,79 @@
 template <class CIx>
 struct ComponentSystem
 {
-    /** Anything that "exists" within the system */
-    struct Entity;
     /** Anything that "happens" within the system */
     struct Operation;
+
+
+    /**** Methods ****
+     */
+    ComponentSystem()
+        // : facades
+    {
+        
+    }
+
+    void update() {
+        for (auto& subsystem : subsystems) {
+            facade.update();
+        }
+    }
     
-    // using CSys = ComponentSystem<CIx>;
-    using OperationQueue = typename
-        std::list<Operation>;
-    using Entities       = typename
-        std::array<Entity, Entity::max_identifiers>;
+    void enqueue(Operation&& op) {}
 
-    /** "Interface" objects, representing operation or other tool */
-    template <class...> struct Spawn;
-    // template <class...> struct ;
-
+    // template <class... Cs>
+    EntityID create() {
+        EntityID = fresh_ident();
+        
+        Entity e;
+    }
 
 
-    // struct Time : Component {};
-    // using Components = typename CIx::ComponentVector;
     
-    struct Entity : CIx::Components
+    /**** "Interface" objects ****
+     * represent operations or tools...
+     */
+    // template <class...> struct Spawn;
+
+
+    /**** Operation ****
+     * performed by component
+     * on entities implementing component */
+    struct Operation
+    {
+        virtual void execute();
+    };
+
+    using OperationQueue = typename std::list<Operation>;
+
+
+    /**** Entity ****
+     *  entity is a simple aggregation of components */
+    struct Entity : public CIx::Components
     {
         using Ident = int;
         static const Ident max_identifiers = 1000;
+
     };
 
-    // What is an operation?
-    //    * performed by component
-    //    * on entities with component
-    struct Operation
-    { virtual void execute(); };
-
-    ComponentSystem() {}
-    void enqueue(Operation op) {}
-
-    // template <class... Cs> Entity::Ident create();
-    // Entities& entities();
-
-  private:
-    typename CIx::Facades facades;
-
-    Entities _entities;
-    CIx _index;
-    OperationQueue _op_queue;
-
-  public:
     using EntityID = typename Entity::Ident;
-
-    /** Creates entities
-     *  Needs: an input source.
-     */
-    template <class... Cs>
-    struct Spawn
-        : Operation
-        , std::enable_if<CIx::template is_valid_entity<Cs...>::value>
-    {
+    
+    using Entities = typename
+        std::array<Entity<CIx>, Entity::max_identifiers>;
+    
+    // static EntityID fresh_ident() {
+    //     static EntityID current_ident = 0;
         
-        void execute(ComponentSystem& system) {
-            // std::unique_ptr<Entity>&
-            EntityID ent = system.entities.fresh_ident();
-
-            // for C in Cs...
-            // system.facades.get<C>().initiate();
         
-        }
-    };
+    // }
 
+    
+
+    
+    
+    typename CIx::Facades facades;
+    Entities              entities;
+    OperationQueue        op_queue;
 };
 
 
@@ -98,5 +115,17 @@ struct ComponentSystem
         
 //     }
 // };
+
+
+
+#ifdef _BUILD_TEST
+
+struct C0 : Component {};
+struct C1 : Component {};
+
+ComponentSystem<ComponentIndex<C0, C1> > csys;
+// static_assert(, "");
+
+#endif
 
 #endif
