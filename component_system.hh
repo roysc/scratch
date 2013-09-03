@@ -1,4 +1,4 @@
-// #include 
+#include <boost/mpl/for_each.hpp>
 
 #include "component.hh"
 #include "util.hh"
@@ -6,7 +6,50 @@
 #ifndef _SCRATCH_COMPONENT_SYSTEM_
 #define _SCRATCH_COMPONENT_SYSTEM_
 
+namespace functor
+{
+    template <class ComponentSystem, class Entity, class Source>
+    struct InitComponent
+    {
+        ComponentSystem& self;
+        Entity& entity;
+        Source& src;
+        
+        template <class Cpt>
+        void operator()(Cpt _)
+        {
+            auto sub = self.subsystems.template get<Cpt>();
+            entity.add_component(sub.create(src));
+        }
+    };
+        
+    template <class Entity>
+    struct VerifyComponent
+    {
+        Entity& self;
+        
+        template <class Cpt>
+        void operator()(Cpt _)
+        {
+            auto cpt_ptr = self.index.template get<Cpt>();
+            assert(cpt_ptr != nullptr &&
+                   "Component dependency is not initialized!\n");
+        }
+    };
 
+    template <class ComponentSystem>
+    struct UpdateSubsystem
+    {
+        ComponentSystem& self;
+
+        template <class Subsystem>
+        void operator()(Subsystem _)
+        {
+            self.subsystems.template get<Subsystem>().update();
+        }
+    };
+
+}
 
 /**
  * Represents a system which can handle the specified components.
@@ -15,60 +58,53 @@
 template <class SystemIndex>
 struct ComponentSystem
 {
-    using Subsystems = typename util::TypeVector<Subsystem<Cpts>...>;
+    using Subsystems = typename util::transform<Subsystem, SystemIndex>;
 
     struct Operation;
     using OperationQueue = typename std::list<Operation>;
 
 
     template <class> struct Entity;
-    // using Entities = 
+    // using Entities = std::vector
 
 
     // members
     Subsystems     subsystems ;
-    Entities       entities   ;
+    // Entities       entities   ;
     OperationQueue op_queue   ;
 
     
     void update()
     {
-        for (auto& subsystem : subsystems) {
-            facade.update();
-        }
+        functor::UpdateSubsystem<
+            decltype(*this)
+            > f{*this};
+
+        boost::mpl::for_each<Subsystems>(f);
+        // // with C++14:
+        // boost::mpl::for_each<Subsystems>(
+        //     [&] <class Subsystem> (Subsystem _) {
+        //         subsystems.template get<Subsystem>().update();
+        //     });
     }
     
-    void enqueue(Operation&& op)
-    {
-        
-    }
-
+    void enqueue(Operation&& op) { }
+    
     template <class EntityIndex, class Source>
-    Entity<EntityIndex> create_entity(Source& src)
+    Entity<EntityIndex>& create_entity(Source& src)
     {
         Entity<EntityIndex> entity;
 
+        // auto cpt = subsystems.get<Cpt>().create(src);
+        // entity.add_component<Cpt>(cpt);
+        // functor::InitComponent<> f{*this, entity, src};
+        functor::InitComponent<
+            decltype(*this),
+            Entity<EntityIndex>,
+            Source
+            > f{*this, entity, src};
         
-        auto cpt = subsystems.get<Cpt>().create(src);
-        entity.add_component<Cpt>(cpt);
-        
-        
-        // template <class Subsystems, class Ent>
-        // struct Initialize
-        // {
-        //     Subsystems& subsystems;
-        //     Ent& entity;
-            
-        //     template <class Cpt>
-        //     void operator()(Cpt* cpt)
-        //     {
-        //         auto cpt = subsystems.get<Cpt>().create(src);
-        //         entity.add_component<Cpt>(cpt);
-        //     }
-        // }
-        
-        // boost::mpl::for_each<EntityIndex::Components>(
-        //     Initialize{subsystems, entity});
+        boost::mpl::for_each<EntityIndex>(f);
     }
 
 
@@ -91,23 +127,17 @@ struct ComponentSystem
         EntityIndex index;
 
         template <class Cpt>
-        void add(Cpt* cpt)
+        void add_component(Cpt* cpt)
         {
-            Dependencies<Cpt>::Types
-            
-            std::vector<size_t> ixs;
-            for (auto& ix : ixs)
-                assert(index.get<Cpt>() != nullptr);
-            
-            index.get<Cpt>() = cpt;
-            // import std.stdio; writeln(*index.get!Cpt);
-        }
+            functor::VerifyComponent<
+                decltype(*this)
+                > f{*this};
 
+            boost::mpl::for_each<Dependencies<Cpt> >(f);
+            
+            index.template get<Cpt>() = cpt;
+        }
         
-        
-        using SystemIndex::Components::get;
-        // using SystemIndex::Components::set;
-    
     };
 };
 

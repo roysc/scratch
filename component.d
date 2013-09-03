@@ -9,12 +9,12 @@ struct TypeVector(Ts...)
     // alias tuple this;
 
     ref T get(T)() {
-        enum idx = staticIndexOf!(T, typeof(tuple));
+        enum idx = staticIndexOf!(T, Ts);
 
         import std.conv;
         static assert(idx != -1,
                       text("No ", T.stringof, " in ", Tuple.stringof));
-        return this[idx];
+        return tuple[idx];
     }
 }
 
@@ -67,6 +67,12 @@ mixin template Vec2()
         struct { uint x, y; }
     }
     alias InputType = typeof(v);
+
+    string toString() {
+        import std.conv;
+        return text(__traits(identifier, typeof(this)),
+                    "(", x, ", ", y, ")");
+    }
 }
 
 struct Position
@@ -93,6 +99,7 @@ struct NullSource
 {
     auto next(T)()
     {
+        import std.random;
         return T.init;
     }
 }
@@ -100,11 +107,29 @@ struct NullSource
 struct Subsystem(Cpt)
 {
     Cpt[EntityID] data;
+
+    void update();
     
-    Cpt* create(Source)(EntityID id, ref Source input)
+    Cpt* create(Source)(EntityID id, ref Source src)
     {
-        
-        data[id] = Cpt(input.next!(Cpt.InputType));
+        auto input = src.next!(Cpt.InputType);
+        data[id] = Cpt(input);
+        return id in data;
+    }
+}
+
+struct Subsystem(Cpt : Motion)
+{
+    Motion[EntityID] data;
+    Motion.InputType cur;
+
+    void update();
+    
+    Cpt* create(Source)(EntityID id, ref Source src)
+    {
+        auto input = cur;
+        cur[] += 1;
+        data[id] = Cpt(input);
         return id in data;
     }
 }
@@ -119,14 +144,21 @@ struct ComponentSystem(SystemIndex)
     
     bool[EntityID] freeIDs;
 
+    void update()
+    {
+        foreach (C; SystemIndex.Components)
+            subsystems.get!(Subsystem!C).update();
+    }
+    
     auto createEntity(EntityIndex)()
     { return createEntity!(EntityIndex, NullSource)(defaultInput); }
     
-    auto createEntity(EntityIndex, Source)(Source input)
+    auto createEntity(EntityIndex, Source)(ref Source input)
     {
         Entity!(EntityIndex) entity;
         foreach (C; EntityIndex.Components) {
-            auto cpt = subsystems.get!C.create(input);
+            auto id = getFreshID();
+            C* cpt = subsystems.get!(Subsystem!C).create(id, input);
             entity.addComponent!C(cpt);
         }
 
@@ -160,7 +192,7 @@ struct ComponentSystem(SystemIndex)
             if (EntityIndex.supports!(Cpt))
         {
             import std.conv;
-            foreach (C; Dependencies!Cpt.Components)
+            foreach (C; Dependencies!Cpt)
                 assert(index.get!C !is null,
                        text("Dependency ", typeid(C), " is not initiated!"));
                 
@@ -189,6 +221,8 @@ void main()
 
     CSys system;
 
+    system.update();
+    
     auto ents = new EntPM[5];
 
     foreach (ref ent; ents) {
