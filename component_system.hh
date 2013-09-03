@@ -1,60 +1,75 @@
+// #include 
 
 #include "component.hh"
+#include "util.hh"
 
 #ifndef _SCRATCH_COMPONENT_SYSTEM_
 #define _SCRATCH_COMPONENT_SYSTEM_
 
-
-template <class CIx>
-/** Anything that "exists" within the system */
-struct Entity
-{
-    using CIx::Components::get;
-    // using CIx::Components::set;
-    
-};
 
 
 /**
  * Represents a system which can handle the specified components.
  * 
  */
-template <class CIx>
+template <class SystemIndex>
 struct ComponentSystem
 {
-    /** Anything that "happens" within the system */
+    using Subsystems = typename util::TypeVector<Subsystem<Cpts>...>;
+
     struct Operation;
+    using OperationQueue = typename std::list<Operation>;
 
 
-    /**** Methods ****
-     */
-    ComponentSystem()
-        // : facades
+    template <class> struct Entity;
+    // using Entities = 
+
+
+    // members
+    Subsystems     subsystems ;
+    Entities       entities   ;
+    OperationQueue op_queue   ;
+
+    
+    void update()
     {
-        
-    }
-
-    void update() {
         for (auto& subsystem : subsystems) {
             facade.update();
         }
     }
     
-    void enqueue(Operation&& op) {}
-
-    // template <class... Cs>
-    EntityID create() {
-        EntityID = fresh_ident();
+    void enqueue(Operation&& op)
+    {
         
-        Entity e;
     }
 
+    template <class EntityIndex, class Source>
+    Entity<EntityIndex> create_entity(Source& src)
+    {
+        Entity<EntityIndex> entity;
 
-    
-    /**** "Interface" objects ****
-     * represent operations or tools...
-     */
-    // template <class...> struct Spawn;
+        
+        auto cpt = subsystems.get<Cpt>().create(src);
+        entity.add_component<Cpt>(cpt);
+        
+        
+        // template <class Subsystems, class Ent>
+        // struct Initialize
+        // {
+        //     Subsystems& subsystems;
+        //     Ent& entity;
+            
+        //     template <class Cpt>
+        //     void operator()(Cpt* cpt)
+        //     {
+        //         auto cpt = subsystems.get<Cpt>().create(src);
+        //         entity.add_component<Cpt>(cpt);
+        //     }
+        // }
+        
+        // boost::mpl::for_each<EntityIndex::Components>(
+        //     Initialize{subsystems, entity});
+    }
 
 
     /**** Operation ****
@@ -65,46 +80,45 @@ struct ComponentSystem
         virtual void execute();
     };
 
-    using OperationQueue = typename std::list<Operation>;
-
 
     /**** Entity ****
-     *  entity is a simple aggregation of components */
-    struct Entity : public CIx::Components
+     *  Anything that "exists" within the system 
+     *  Contains a simple aggregation of components
+     */
+    template <class EntityIndex>
+    struct Entity
     {
-        using Ident = int;
-        static const Ident max_identifiers = 1000;
+        EntityIndex index;
 
+        template <class Cpt>
+        void add(Cpt* cpt)
+        {
+            Dependencies<Cpt>::Types
+            
+            std::vector<size_t> ixs;
+            for (auto& ix : ixs)
+                assert(index.get<Cpt>() != nullptr);
+            
+            index.get<Cpt>() = cpt;
+            // import std.stdio; writeln(*index.get!Cpt);
+        }
+
+        
+        
+        using SystemIndex::Components::get;
+        // using SystemIndex::Components::set;
+    
     };
-
-    using EntityID = typename Entity::Ident;
-    
-    using Entities = typename
-        std::array<Entity<CIx>, Entity::max_identifiers>;
-    
-    // static EntityID fresh_ident() {
-    //     static EntityID current_ident = 0;
-        
-        
-    // }
-
-    
-
-    
-    
-    typename CIx::Facades facades;
-    Entities              entities;
-    OperationQueue        op_queue;
 };
 
 
 // /** Create entity */
 // // does this need to be aware of a specific system?
-// template <class CIx>
+// template <class SystemIndex>
 // template <class... Cs>
-// struct ComponentSystem<CIx>::Spawn
+// struct ComponentSystem<SystemIndex>::Spawn
 //     : Operation
-//     , std::enable_if<CIx::template is_valid_entity<Cs...>::value>
+//     , std::enable_if<SystemIndex::template is_valid_entity<Cs...>::value>
 // {
 //     void execute(ComponentSystem& system) {
 //         // std::unique_ptr<Entity>&

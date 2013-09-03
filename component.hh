@@ -8,10 +8,12 @@
 #ifndef _SCRATCH_COMPONENT_
 #define _SCRATCH_COMPONENT_
 
+using EntityID = ulong;
+
 struct Component
 {
-    using Ident = uint;
-    static const Ident ID = 0;
+    // using Ident = uint;
+    // static const Ident ID = 0;
 
     using InputType = void;
 };
@@ -20,58 +22,54 @@ template <class Cpt>
 struct Subsystem
 {
     static const size_t init_capacity = 100;
-    std::vector<Cpt> data;
+    using Data = std::unordered_map<EntityID, Cpt>;
+    // std::vector<Cpt>;
+    Data data;
     
-    Subsystem()
-        : data(init_capacity)
-    {}
 
     void update() {}
 
-    Cpt* create() {
-        // assert(false, "Must implement specialized create() method");
+    template <class Source>
+    Cpt* create(EntityID ent_id, Source& src) {
+        // assert(false && "Must implement specialized create() method");
 
-        auto ctor_input = input.next<Cpt::InitData>();
-        Cpt cpt(ctor_input);
-        
+        auto input = src.next<Cpt::InputType>();
+        data[ent_id] = Cpt(input);
+        return &data[ent_id];
     }
 };
 
-/** The Component trait contract:
- *  - must inherit from Component
- */
+
 template <class Cpt>
-struct is_Component
-    : public std::is_base_of<Component, Cpt>
-    // , std::enable_if<has_Subsystem<Cpt>::value>
-{};
+struct Dependencies
+{
+    
+};
 
 /** Provides unique identifiers for Components;
  *  Determines Component layout in entities.
  */
 template <class... Cpts>
 struct ComponentIndex
-    : public std::enable_if<util::all_satisfy<is_Component, Cpts...>::value>
+    : public util::TypeVector<std::add_pointer<Cpts>...>;
 {
-    // template <class Cpt> struct _subsystem_ptr
-    // { using type = typename std::add_pointer<typename Cpt::Subsystem>; };
+    // using Components = typename util::TypeVector<std::add_pointer<Cpts>...>;
+    // Components contents;
 
-    /// A set of pointers to component objects.
-    /// Used in entity objects.
-    using Components = typename util::TypeVector<std::add_pointer<Cpts>...>;
-
-    /// A set of subsystems corresponding to component types
-    using Subsystems = typename util::TypeVector<Subsystem<Cpts>...>;
-
-    // std::array<Subsystem*, sizeof...(Cpts)>;   
     
     /* Type predicates */
     /** Whether this ComponentIndex supports a given Component */
+    template <class> struct supports;
+    
     template <class Cpt>
-    struct has_component : util::is_member<Cpt, Cpts...> { };
-    /** Whether an Entity implementing these Components can be implemented */
-    template <class... Cs>
-    struct is_valid_entity : util::all_satisfy<has_component, Cs...> { };
+    struct supports
+        : public util::is_member<Cpt, Cpts...> { };
+
+    template <template <class...> class CIx,
+              class... OtherCpts>
+    // others must form subset
+    struct supports<CIx<OtherCpts>>
+        : public util::all_satisfy<supports, OtherCpts...> { };
            
 };
 
