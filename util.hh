@@ -1,6 +1,8 @@
 #include <type_traits>
 #include <tuple>
 
+#include <boost/mpl/vector.hpp>
+
 #ifndef _SCRATCH_UTIL_
 #define _SCRATCH_UTIL_
 
@@ -33,6 +35,7 @@ namespace util
                            any_satisfy<Pred, Ts...> >::type
     {};
 
+    
     /// Check membership in Ts 
     template <class T, class... Ts>
     struct is_member
@@ -41,11 +44,10 @@ namespace util
         static constexpr bool value = any_satisfy<predicate, Ts...>::value;
     };
 
+    
     /** Filter a parameter pack */    
-    template <template <class> class, class>
-              // template <class...> class,
-              // class...>
-    struct filter;
+    template <template <class> class, class> struct filter;
+
     template <template <class> class Pred, template <class...> class Variadic>
     struct filter<Pred, Variadic<> > { using type = Variadic<>; };
     template <template <class> class Pred,
@@ -65,15 +67,19 @@ namespace util
             >::type;
     };
 
-    // /** Transform a variadic template */
+    
+    /** Transform a variadic template */
     template <template <class> class, class> struct transform;
+
     template <template <class> class How,
               template <class...> class Variadic, class... Ts>
     struct transform<How, Variadic<Ts...>>
-    { using type = Variadic<typename How<Ts>::type...>; };
+    { using type = Variadic<How<Ts>...>; };
+
     
     /** Enable lookup by type (will be in std::get by C++14) */
     template <class, class...> struct _index_of;
+
     template <class T, class... Ts>
     struct _index_of<T, T, Ts...>
         : public std::integral_constant<int, 0>
@@ -83,9 +89,11 @@ namespace util
         : public std::integral_constant<int, 1 + _index_of<T, Ts...>::value>
     {};
 
+    
     /** A tuple with indexing by type */
     template <class... Ts>
     struct TypeVector : private std::tuple<Ts...>
+                      , public boost::mpl::vector<Ts...>
     {
         template <class T> T&& get() {
             return std::get<_index_of<T>::value>(*this);
@@ -121,8 +129,14 @@ static_assert(std::is_same<
               filter<std::is_integral, std::tuple<int, float, long> >::type,
               std::tuple<int, long> >::value, "");
 
+namespace std
+{
+    template <class T>
+    using add_pointer_t = typename add_pointer<T>::type;
+}
+
 static_assert(std::is_same<
-              transform<std::add_pointer,
+              transform<std::add_pointer_t,
               std::tuple<int, float, char*> >::type,
               std::tuple<int*, float*, char**> >::value, "");
 

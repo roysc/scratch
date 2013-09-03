@@ -1,7 +1,8 @@
 #include <array>
 #include <list>
 #include <type_traits>
-#include <tuple>
+// #include <tuple>
+#include <unordered_map>
 
 #include "util.hh"
 
@@ -21,7 +22,8 @@ struct Component
 template <class Cpt>
 struct Subsystem
 {
-    static const size_t init_capacity = 100;
+    // static const size_t init_capacity = 100;
+    
     using Data = std::unordered_map<EntityID, Cpt>;
     // std::vector<Cpt>;
     Data data;
@@ -33,9 +35,9 @@ struct Subsystem
     Cpt* create(EntityID ent_id, Source& src) {
         // assert(false && "Must implement specialized create() method");
 
-        auto input = src.next<Cpt::InputType>();
-        data[ent_id] = Cpt(input);
-        return &data[ent_id];
+        // auto input = src.next<typename Cpt::InputType>();
+        // data[ent_id] = Cpt(input);
+        // return &data[ent_id];
     }
 };
 
@@ -51,11 +53,12 @@ struct Dependencies
  */
 template <class... Cpts>
 struct ComponentIndex
-    : public util::TypeVector<std::add_pointer<Cpts>...>;
+    : public util::TypeVector<std::add_pointer<Cpts>...>
 {
     // using Components = typename util::TypeVector<std::add_pointer<Cpts>...>;
     // Components contents;
 
+    
     
     /* Type predicates */
     /** Whether this ComponentIndex supports a given Component */
@@ -68,17 +71,17 @@ struct ComponentIndex
     template <template <class...> class CIx,
               class... OtherCpts>
     // others must form subset
-    struct supports<CIx<OtherCpts>>
+    struct supports<CIx<OtherCpts...>>
         : public util::all_satisfy<supports, OtherCpts...> { };
            
 };
 
 #ifdef _BUILD_TEST
 
-struct C0 : Component {};
-struct C1 : Component {};
+// struct C0 : Component {};
+// struct C1 : Component {};
 
-ComponentIndex<C0, C1> cix;
+// ComponentIndex<C0, C1> cix;
 // static_assert(, "");
 
 #endif
