@@ -44,7 +44,7 @@ struct Subsystem
  */
 template <class... Cpts>
 struct ComponentIndex
-    : public util::TypeVector<std::add_pointer<Cpts>...>
+    : public util::TypeVector<typename std::add_pointer<Cpts>::type...>
 {
     // using Components = typename util::TypeVector<std::add_pointer<Cpts>...>;
     // Components contents;

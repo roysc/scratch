@@ -75,7 +75,10 @@ namespace util
               template <class...> class Variadic, class... Ts>
     struct transform<How, Variadic<Ts...>>
     { using type = Variadic<How<Ts>...>; };
-
+    
+    template <template <class> class How, class Variadic>
+    using transform_t = typename transform<How, Variadic>::type;
+    
     
     /** Enable lookup by type (will be in std::get by C++14) */
     template <class, class...> struct _index_of;
@@ -92,10 +95,10 @@ namespace util
     
     /** A tuple with indexing by type */
     template <class... Ts>
-    struct TypeVector : private std::tuple<Ts...>
+    struct TypeVector : public std::tuple<Ts...>
                       , public boost::mpl::vector<Ts...>
     {
-        template <class T> T&& get() {
+        template <class T> T& get() {
             return std::get<_index_of<T>::value>(*this);
         }
         template <class T> void set(T&& a) {

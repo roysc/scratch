@@ -13,12 +13,11 @@ namespace functor
 {
     using boost::mpl::for_each;
     
-    template <template <class...> class Functor, class... Args>
-    Functor<Args...> make(Args...);
-    
-    template <class, class, class> struct InitComponent;
-    template <class> struct VerifyComponent;
-    template <class> struct UpdateSubsystem;
+    template <class ComponentSpace,
+              class Entity,
+              class Source> struct InitComponent;
+    template <class Entity> struct VerifyComponent;
+    template <class ComponentSpace> struct UpdateSubsystem;
 }
 
 /**** Entity ****
@@ -34,8 +33,8 @@ struct Entity
     void add_component(Cpt* cpt)
     {
         using namespace functor;
-            
-        auto f = make<VerifyComponent>(*this);
+
+        VerifyComponent<decltype(this)> f {this};
         for_each<Dependencies<Cpt> >(f);
             
         index.template get<Cpt>() = cpt;
@@ -47,10 +46,11 @@ struct Entity
  * Represents a system which can handle the specified components.
  * 
  */
-template <class FullIndex>
+template <class... Cpts>
 struct ComponentSpace
 {
-    using Subsystems = typename util::transform<Subsystem, FullIndex>;
+    using Subsystems = typename
+        util::transform_t<Subsystem, util::TypeVector<Cpts...> >;
 
     // using Entities = std::vector
 
@@ -64,39 +64,63 @@ struct ComponentSpace
     void update()
     {
         using namespace functor;
-        auto f = make<UpdateSubsystem>(*this);
+
+        UpdateSubsystem<decltype(this)> f {this};
         for_each<Subsystems>(f);
     }
     
     template <class EntityIndex, class Source>
-    Entity<EntityIndex>&& create_entity(Source& src)
+    Entity<EntityIndex>& create_entity(Source& src)
     {
         Entity<EntityIndex> entity;
         EntityID id = fresh_id();
 
         using namespace functor;
 
-        auto f = make<InitComponent>(*this, entity, src, id);
-        for_each<EntityIndex>(f);
+        // InitComponent<decltype(this),
+        //               Entity<EntityIndex>,
+        //               Source> f {this, entity, src, id};
+        // for_each<EntityIndex>(f);
 
         return entity;
     }
-
+    
     EntityID fresh_id()
     {
         EntityID id = 0;
-
-        for (bool& used : used_ids) {
-            if (!used) {
-                used = true;
+        for (; id < used_ids.size(); ++id) {
+            if (!used_ids[id]) {
+                used_ids[id] = true;
                 return id;
             }
-            id++;
         }
         used_ids.push_back(true);
-        return id + 1;
+        return id;
     }
 
+    // template <class ComponentSpace, class Entity, class Source>
+    // struct InitComponent
+    // {
+    //     ComponentSpace self;
+    //     Entity& entity;
+    //     Source& src;
+    //     EntityID id;
+        
+    //     template <class Cpt>
+    //     void operator()(Cpt _)
+    //     {
+    //         auto sub = self->template get_subsystem<Cpt>();
+
+    //         // entity.add_component(sub.create(id, src));
+    //     }
+    // };
+
+    template <class Cpt>
+    Subsystem<Cpt> get_subsystem()
+    {
+        return subsystems.template get<Subsystem<Cpt> >();
+    }
+    
 
     /**** Operation ****
      * performed by component
@@ -120,31 +144,34 @@ namespace functor
     //     [&] <class Subsystem> (Subsystem _) {
     //         subsystems.template get<Subsystem>().update();
     //     });
-    template <template <class...> class Functor, class... Args>
-    Functor<Args...> make(Args... args) {
-        return Functor<Args...> {std::forward(args)...};
-    }
+
+    // // does not work for constructors with diff. arity than tpl. params
+    // template <template <class...> class Functor, class... Args>
+    // Functor<Args...> make(Args... args) {
+    //     return Functor<Args...> {std::forward(args)...};
+    // }
     
-    template <class ComponentSpace, class Entity, class Source>
-    struct InitComponent
-    {
-        ComponentSpace& self;
-        Entity& entity;
-        Source& src;
-        EntityID id;
+    // template <class ComponentSpace, class Entity, class Source>
+    // struct InitComponent
+    // {
+    //     ComponentSpace self;
+    //     Entity& entity;
+    //     Source& src;
+    //     EntityID id;
         
-        template <class Cpt>
-        void operator()(Cpt _)
-        {
-            auto sub = self.subsystems.template get<Cpt>();
-            entity.add_component(sub.create(id, src));
-        }
-    };
+    //     template <class Cpt>
+    //     void operator()(Cpt _)
+    //     {
+    //         auto sub = self->template get_subsystem<Cpt>();
+
+    //         // entity.add_component(sub.create(id, src));
+    //     }
+    // };
 
     template <class Entity>
     struct VerifyComponent
     {
-        Entity& self;
+        Entity self;
         
         template <class Cpt>
         void operator()(Cpt _)
@@ -158,7 +185,7 @@ namespace functor
     template <class ComponentSpace>
     struct UpdateSubsystem
     {
-        ComponentSpace& self;
+        ComponentSpace self;
 
         template <class Subsystem>
         void operator()(Subsystem _)
