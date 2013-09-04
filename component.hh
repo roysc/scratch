@@ -23,19 +23,12 @@ struct Component
 template <class Cpt>
 struct Subsystem
 {
-    // static const size_t init_capacity = 100;
-    
     using Data = std::unordered_map<EntityID, Cpt>;
     Data data;
     
-    template <class Source>
-    Cpt* create(EntityID ent_id, Source& src) {
-    // Cpt* create(EntityID ent_id) {
+    Cpt* create(EntityID ent_id) {
         // assert(false && "Must implement specialized create() method");
 
-        // using InputType = typename Cpt::InputType;
-
-        // InputType input = src.template next<InputType>();
         data.emplace(ent_id, Cpt());
 
         return &data[ent_id];

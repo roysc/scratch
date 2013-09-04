@@ -15,8 +15,7 @@ namespace functor
     using boost::mpl::for_each;
     
     template <class ComponentSpace,
-              class Entity,
-              class Source> struct InitComponent;
+              class Entity> struct InitComponent;
     template <class Entity> struct VerifyComponent;
     template <class ComponentSpace> struct UpdateSubsystem;
 }
@@ -40,7 +39,12 @@ struct Entity
             
         util::get<Cpt*>(index) = cpt;
     }
-        
+
+    template <class Cpt>
+    Cpt* get_component()
+    {
+        return util::get<Cpt*>(index);
+    }
 };
 
 /**
@@ -70,8 +74,8 @@ struct ComponentSpace
         for_each<Subsystems>(f);
     }
     
-    template <class EntityIndex, class Source>
-    Entity<EntityIndex>& create_entity(Source& src)
+    template <class EntityIndex>
+    Entity<EntityIndex>& create_entity()
     {
         Entity<EntityIndex> entity;
         EntityID id = fresh_id();
@@ -79,8 +83,7 @@ struct ComponentSpace
         using namespace functor;
 
         InitComponent<decltype(this),
-                      EntityIndex,
-                      Source> f {this, entity, src, id};
+                      EntityIndex> f {this, entity, id};
         for_each<typename EntityIndex::Components>(f);
 
         return entity;
@@ -135,19 +138,18 @@ namespace functor
     //     return Functor<Args...> {std::forward(args)...};
     // }
     
-    template <class ComponentSpace, class EntityIndex, class Source>
+    template <class ComponentSpace, class EntityIndex>
     struct InitComponent
     {
         ComponentSpace self;
         Entity<EntityIndex>& entity;
-        Source& src;
         EntityID id;
         
         template <class Cpt>
         void operator()(Cpt _)
         {
             Subsystem<Cpt> sub = self->template get_subsystem<Cpt>();
-            entity.add_component(sub.create(id, src));
+            entity.add_component(sub.create(id));
         }
     };
 
