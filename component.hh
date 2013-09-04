@@ -25,26 +25,32 @@ struct Subsystem
     // static const size_t init_capacity = 100;
     
     using Data = std::unordered_map<EntityID, Cpt>;
-    // std::vector<Cpt>;
     Data data;
     
-
-    void update() {}
-
     template <class Source>
     Cpt* create(EntityID ent_id, Source& src) {
         // assert(false && "Must implement specialized create() method");
 
-        // auto input = src.next<typename Cpt::InputType>();
-        // data[ent_id] = Cpt(input);
-        // return &data[ent_id];
+        auto input = src.template next<typename Cpt::InputType>();
+        data[ent_id] = Cpt(input);
+        data.emplace(ent_id, Cpt(input));
+        return &data[ent_id];
     }
 };
 
 
-template <class Cpt>
-struct Dependencies
+/** Represents logic involving several component subsystems 
+ */
+template <class SystemIndex, class ComponentSpace>
+struct LogicSystem
 {
+    struct Operation;
+    using OperationQueue = typename std::list<Operation>;
+
+    OperationQueue op_queue;
+    ComponentSpace space;
+    void update() {}
+    
     
 };
 
@@ -75,6 +81,11 @@ struct ComponentIndex
         : public util::all_satisfy<supports, OtherCpts...> { };
            
 };
+
+template <class LogicSystem>
+struct Dependencies : ComponentIndex<>
+{ };
+
 
 #ifdef _BUILD_TEST
 

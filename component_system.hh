@@ -24,10 +24,10 @@ namespace functor
  * Represents a system which can handle the specified components.
  * 
  */
-template <class SystemIndex>
-struct ComponentSystem
+template <class FullIndex>
+struct ComponentSpace
 {
-    using Subsystems = typename util::transform<Subsystem, SystemIndex>;
+    using Subsystems = typename util::transform<Subsystem, FullIndex>;
 
     struct Operation;
     using OperationQueue = typename std::list<Operation>;
@@ -38,9 +38,9 @@ struct ComponentSystem
 
 
     // members
-    Subsystems     subsystems ;
+    Subsystems     subsystems;
     // Entities       entities   ;
-    OperationQueue op_queue   ;
+    OperationQueue op_queue;
     
     std::vector<bool> used_ids;
 
@@ -70,7 +70,7 @@ struct ComponentSystem
 
     EntityID fresh_id()
     {
-        EntityID id;
+        EntityID id = 0;
 
         for (bool& used : used_ids) {
             if (!used) {
@@ -119,7 +119,6 @@ struct ComponentSystem
 
 namespace functor
 {
-
     // By C++14, this can be replaced with e.g.:
     // for_each<EntityIndex>(
     //     [&] <class Cpt> (Cpt _) {
@@ -134,10 +133,10 @@ namespace functor
         return Functor(std::forward(args)...);
     }
     
-    template <class ComponentSystem, class Entity, class Source>
+    template <class ComponentSpace, class Entity, class Source>
     struct InitComponent
     {
-        ComponentSystem& self;
+        ComponentSpace& self;
         Entity& entity;
         Source& src;
         
@@ -163,10 +162,10 @@ namespace functor
         }
     };
 
-    template <class ComponentSystem>
+    template <class ComponentSpace>
     struct UpdateSubsystem
     {
-        ComponentSystem& self;
+        ComponentSpace& self;
 
         template <class Subsystem>
         void operator()(Subsystem _)
@@ -179,13 +178,13 @@ namespace functor
 
 // /** Create entity */
 // // does this need to be aware of a specific system?
-// template <class SystemIndex>
+// template <class FullIndex>
 // template <class... Cs>
-// struct ComponentSystem<SystemIndex>::Spawn
+// struct ComponentSpace<FullIndex>::Spawn
 //     : Operation
-//     , std::enable_if<SystemIndex::template is_valid_entity<Cs...>::value>
+//     , std::enable_if<FullIndex::template is_valid_entity<Cs...>::value>
 // {
-//     void execute(ComponentSystem& system) {
+//     void execute(ComponentSpace& system) {
 //         // std::unique_ptr<Entity>&
 //         Entity::Ident ent = system.entities.fresh_ident();
 
@@ -202,7 +201,7 @@ namespace functor
 struct C0 : Component {};
 struct C1 : Component {};
 
-ComponentSystem<ComponentIndex<C0, C1> > csys;
+ComponentSpace<ComponentIndex<C0, C1> > csys;
 // static_assert(, "");
 
 #endif
