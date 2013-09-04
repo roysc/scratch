@@ -13,12 +13,35 @@ namespace functor
 {
     using boost::mpl::for_each;
     
-    template <class, class... Args> auto make(Args&&...);
+    template <template <class...> class Functor, class... Args>
+    Functor<Args...> make(Args...);
     
     template <class, class, class> struct InitComponent;
     template <class> struct VerifyComponent;
     template <class> struct UpdateSubsystem;
 }
+
+/**** Entity ****
+ *  Anything that "exists" within the system 
+ *  Contains a simple aggregation of components
+ */
+template <class EntityIndex>
+struct Entity
+{
+    EntityIndex index;
+
+    template <class Cpt>
+    void add_component(Cpt* cpt)
+    {
+        using namespace functor;
+            
+        auto f = make<VerifyComponent>(*this);
+        for_each<Dependencies<Cpt> >(f);
+            
+        index.template get<Cpt>() = cpt;
+    }
+        
+};
 
 /**
  * Represents a system which can handle the specified components.
@@ -29,19 +52,12 @@ struct ComponentSpace
 {
     using Subsystems = typename util::transform<Subsystem, FullIndex>;
 
-    struct Operation;
-    using OperationQueue = typename std::list<Operation>;
-
-
-    template <class> struct Entity;
     // using Entities = std::vector
 
 
     // members
-    Subsystems     subsystems;
-    // Entities       entities   ;
-    OperationQueue op_queue;
-    
+    Subsystems subsystems;
+    // Entities entities;
     std::vector<bool> used_ids;
 
     
@@ -52,10 +68,8 @@ struct ComponentSpace
         for_each<Subsystems>(f);
     }
     
-    void enqueue(Operation&& op) { }
-    
     template <class EntityIndex, class Source>
-    Entity<EntityIndex>& create_entity(Source& src)
+    Entity<EntityIndex>&& create_entity(Source& src)
     {
         Entity<EntityIndex> entity;
         EntityID id = fresh_id();
@@ -92,28 +106,6 @@ struct ComponentSpace
         virtual void execute();
     };
 
-
-    /**** Entity ****
-     *  Anything that "exists" within the system 
-     *  Contains a simple aggregation of components
-     */
-    template <class EntityIndex>
-    struct Entity
-    {
-        EntityIndex index;
-
-        template <class Cpt>
-        void add_component(Cpt* cpt)
-        {
-            using namespace functor;
-            
-            auto f = make<VerifyComponent>(*this);
-            for_each<Dependencies<Cpt> >(f);
-            
-            index.template get<Cpt>() = cpt;
-        }
-        
-    };
 };
 
 
@@ -128,9 +120,9 @@ namespace functor
     //     [&] <class Subsystem> (Subsystem _) {
     //         subsystems.template get<Subsystem>().update();
     //     });
-    template <class Functor, class... Args>
-    auto make(Args&&... args) {
-        return Functor(std::forward(args)...);
+    template <template <class...> class Functor, class... Args>
+    Functor<Args...> make(Args... args) {
+        return Functor<Args...> {std::forward(args)...};
     }
     
     template <class ComponentSpace, class Entity, class Source>
@@ -139,12 +131,13 @@ namespace functor
         ComponentSpace& self;
         Entity& entity;
         Source& src;
+        EntityID id;
         
         template <class Cpt>
         void operator()(Cpt _)
         {
             auto sub = self.subsystems.template get<Cpt>();
-            entity.add_component(sub.create(src));
+            entity.add_component(sub.create(id, src));
         }
     };
 

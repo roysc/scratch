@@ -32,27 +32,12 @@ struct Subsystem
         // assert(false && "Must implement specialized create() method");
 
         auto input = src.template next<typename Cpt::InputType>();
-        data[ent_id] = Cpt(input);
+        // data[ent_id] = Cpt(input);
         data.emplace(ent_id, Cpt(input));
         return &data[ent_id];
     }
 };
 
-
-/** Represents logic involving several component subsystems 
- */
-template <class SystemIndex, class ComponentSpace>
-struct LogicSystem
-{
-    struct Operation;
-    using OperationQueue = typename std::list<Operation>;
-
-    OperationQueue op_queue;
-    ComponentSpace space;
-    void update() {}
-    
-    
-};
 
 /** Provides unique identifiers for Components;
  *  Determines Component layout in entities.
@@ -85,6 +70,27 @@ struct ComponentIndex
 template <class LogicSystem>
 struct Dependencies : ComponentIndex<>
 { };
+
+/** Represents logic involving several component subsystems 
+ */
+template <class SystemIndex>
+          // class ComponentSpace>
+struct LogicSystem
+{
+    // struct Operation;
+    // using OperationQueue = typename std::list<Operation>;
+
+    // OperationQueue op_queue;
+    // ComponentSpace space;
+    
+    
+    void update() {}
+
+    
+};
+
+// template <class... LSs>
+// struct LogicIndex
 
 
 #ifdef _BUILD_TEST
