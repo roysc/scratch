@@ -19,6 +19,7 @@ struct Component
     using InputType = void;
 };
 
+// Manages a single type of component
 template <class Cpt>
 struct Subsystem
 {
@@ -29,11 +30,14 @@ struct Subsystem
     
     template <class Source>
     Cpt* create(EntityID ent_id, Source& src) {
+    // Cpt* create(EntityID ent_id) {
         // assert(false && "Must implement specialized create() method");
 
-        auto input = src.template next<typename Cpt::InputType>();
-        // data[ent_id] = Cpt(input);
-        data.emplace(ent_id, Cpt(input));
+        // using InputType = typename Cpt::InputType;
+
+        // InputType input = src.template next<InputType>();
+        data.emplace(ent_id, Cpt());
+
         return &data[ent_id];
     }
 };
@@ -46,10 +50,8 @@ template <class... Cpts>
 struct ComponentIndex
     : public util::TypeVector<typename std::add_pointer<Cpts>::type...>
 {
-    // using Components = typename util::TypeVector<std::add_pointer<Cpts>...>;
-    // Components contents;
+    using Components = util::TypeVector<Cpts...>;
 
-    
     
     /* Type predicates */
     /** Whether this ComponentIndex supports a given Component */

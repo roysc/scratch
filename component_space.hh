@@ -1,12 +1,13 @@
 #include <utility>
 
-#include <boost/mpl/for_each.hpp>
-
 #include "component.hh"
 #include "util.hh"
 
-#ifndef _SCRATCH_COMPONENT_SYSTEM_
-#define _SCRATCH_COMPONENT_SYSTEM_
+#include <boost/mpl/for_each.hpp>
+
+
+#ifndef _SCRATCH_COMPONENT_SPACE_
+#define _SCRATCH_COMPONENT_SPACE_
 
 
 namespace functor
@@ -37,13 +38,13 @@ struct Entity
         VerifyComponent<decltype(this)> f {this};
         for_each<Dependencies<Cpt> >(f);
             
-        index.template get<Cpt>() = cpt;
+        util::get<Cpt*>(index) = cpt;
     }
         
 };
 
 /**
- * Represents a system which can handle the specified components.
+ * An environment which manages the specified components.
  * 
  */
 template <class... Cpts>
@@ -77,10 +78,10 @@ struct ComponentSpace
 
         using namespace functor;
 
-        // InitComponent<decltype(this),
-        //               Entity<EntityIndex>,
-        //               Source> f {this, entity, src, id};
-        // for_each<EntityIndex>(f);
+        InitComponent<decltype(this),
+                      EntityIndex,
+                      Source> f {this, entity, src, id};
+        for_each<typename EntityIndex::Components>(f);
 
         return entity;
     }
@@ -98,27 +99,10 @@ struct ComponentSpace
         return id;
     }
 
-    // template <class ComponentSpace, class Entity, class Source>
-    // struct InitComponent
-    // {
-    //     ComponentSpace self;
-    //     Entity& entity;
-    //     Source& src;
-    //     EntityID id;
-        
-    //     template <class Cpt>
-    //     void operator()(Cpt _)
-    //     {
-    //         auto sub = self->template get_subsystem<Cpt>();
-
-    //         // entity.add_component(sub.create(id, src));
-    //     }
-    // };
-
     template <class Cpt>
-    Subsystem<Cpt> get_subsystem()
+    Subsystem<Cpt>& get_subsystem()
     {
-        return subsystems.template get<Subsystem<Cpt> >();
+        return util::get<Subsystem<Cpt> >(subsystems);
     }
     
 
@@ -151,22 +135,21 @@ namespace functor
     //     return Functor<Args...> {std::forward(args)...};
     // }
     
-    // template <class ComponentSpace, class Entity, class Source>
-    // struct InitComponent
-    // {
-    //     ComponentSpace self;
-    //     Entity& entity;
-    //     Source& src;
-    //     EntityID id;
+    template <class ComponentSpace, class EntityIndex, class Source>
+    struct InitComponent
+    {
+        ComponentSpace self;
+        Entity<EntityIndex>& entity;
+        Source& src;
+        EntityID id;
         
-    //     template <class Cpt>
-    //     void operator()(Cpt _)
-    //     {
-    //         auto sub = self->template get_subsystem<Cpt>();
-
-    //         // entity.add_component(sub.create(id, src));
-    //     }
-    // };
+        template <class Cpt>
+        void operator()(Cpt _)
+        {
+            Subsystem<Cpt> sub = self->template get_subsystem<Cpt>();
+            entity.add_component(sub.create(id, src));
+        }
+    };
 
     template <class Entity>
     struct VerifyComponent
@@ -176,7 +159,7 @@ namespace functor
         template <class Cpt>
         void operator()(Cpt _)
         {
-            auto cpt_ptr = self.index.template get<Cpt>();
+            auto cpt_ptr = util::get<Cpt*>(self->index);
             assert(cpt_ptr != nullptr &&
                    "Component dependency is not initialized!\n");
         }
@@ -190,7 +173,7 @@ namespace functor
         template <class Subsystem>
         void operator()(Subsystem _)
         {
-            self.subsystems.template get<Subsystem>().update();
+            util::get<Subsystem>(self->subsystems).update();
         }
     };
 

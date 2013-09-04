@@ -99,12 +99,15 @@ namespace util
                       , public boost::mpl::vector<Ts...>
     {
         template <class T> T& get() {
-            return std::get<_index_of<T>::value>(*this);
+            return std::get<_index_of<T, Ts...>::value>(*this);
         }
         template <class T> void set(T&& a) {
-            std::get<_index_of<T>::value>(*this) = a;
+            std::get<_index_of<T, Ts...>::value>(*this) = a;
         }
     };
+
+    template <class T, class... Ts>
+    T& get(TypeVector<Ts...>& tv) { return tv.template get<T>(); }
 }
 
 #ifdef _BUILD_TEST
