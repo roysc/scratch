@@ -62,14 +62,14 @@ struct ComponentIndex
            
 };
 
-template <class LogicSystem>
-struct Dependencies : ComponentIndex<>
+
+template <class Cpt>
+struct Dependencies : util::TypeVector<>
 { };
 
 /** Represents logic involving several component subsystems 
  */
-template <class SystemIndex>
-          // class ComponentSpace>
+template <class... Cpts>
 struct LogicSystem
 {
     // struct Operation;
@@ -78,14 +78,8 @@ struct LogicSystem
     // OperationQueue op_queue;
     // ComponentSpace space;
     
-    
     void update() {}
-
-    
 };
-
-// template <class... LSs>
-// struct LogicIndex
 
 
 #ifdef _BUILD_TEST

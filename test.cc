@@ -8,7 +8,7 @@
 
 #include "component_space.hh"
 
-#define MIXIN_VEC_2()                           \
+#define MIXIN_VEC2()                           \
     using Number = uint;                        \
     union {                                     \
         std::array<Number, 2> v;                \
@@ -17,32 +17,18 @@
                                                 \
     using InputType = decltype(v);              
 
-// struct Vec2 : Component
-// {
-//     using Number = uint;
-//     union {
-//         std::array<Number, 2> v;
-//         struct { Number x, y; };
-//     };
-
-//     using InputType = decltype(v);
-    
-//     // Vec2(InputType init) : v(init) {}
-//     // Vec2(Number _x, Number _y) : x(_x), y(_y) {}
-// };
-
 struct Position : Component
 {
-    MIXIN_VEC_2()
+    MIXIN_VEC2()
 };
 
 struct Velocity : Component
 {
-    MIXIN_VEC_2()
+    MIXIN_VEC2()
 };
 
 struct Motion
-    : LogicSystem<ComponentIndex<Position, Velocity> >
+    : LogicSystem<Position, Velocity>
 {
     void update(Position* p, Velocity* v)
     {
