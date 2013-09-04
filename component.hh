@@ -1,10 +1,14 @@
 #include <array>
 #include <list>
 #include <type_traits>
-// #include <tuple>
+#include <typeinfo>
 #include <unordered_map>
+#include <map>
+
+#include <iostream>
 
 #include "util.hh"
+
 
 #ifndef _SCRATCH_COMPONENT_
 #define _SCRATCH_COMPONENT_
@@ -19,21 +23,9 @@ struct Component
     using InputType = void;
 };
 
-// Manages a single type of component
 template <class Cpt>
-struct Subsystem
-{
-    using Data = std::unordered_map<EntityID, Cpt>;
-    Data data;
-    
-    Cpt* create(EntityID ent_id) {
-        // assert(false && "Must implement specialized create() method");
-
-        data.emplace(ent_id, Cpt());
-
-        return &data[ent_id];
-    }
-};
+struct Dependencies : util::TypeVector<>
+{ };
 
 
 /** Provides unique identifiers for Components;
@@ -41,9 +33,10 @@ struct Subsystem
  */
 template <class... Cpts>
 struct ComponentIndex
-    : public util::TypeVector<typename std::add_pointer<Cpts>::type...>
+    : public util::TypeVector<Cpts...> 
+    // : public util::TypeVector<typename std::add_pointer<Cpts>::type...>
 {
-    using Components = util::TypeVector<Cpts...>;
+    // using Components = util::TypeVector<Cpts...>;
 
     
     /* Type predicates */
@@ -62,10 +55,6 @@ struct ComponentIndex
            
 };
 
-
-template <class Cpt>
-struct Dependencies : util::TypeVector<>
-{ };
 
 /** Represents logic involving several component subsystems 
  */

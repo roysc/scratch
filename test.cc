@@ -8,24 +8,28 @@
 
 #include "component_space.hh"
 
-#define MIXIN_VEC2()                           \
-    using Number = uint;                        \
-    union {                                     \
-        std::array<Number, 2> v;                \
-        struct { Number x, y; };                \
-    };                                          \
-                                                \
+struct Vec2 : Component
+{
+    using Number = uint;                        
+    union {                                     
+        std::array<Number, 2> v;                
+        struct { Number x, y; };                
+    };                                          
+                                                
     using InputType = decltype(v);              
-
-struct Position : Component
-{
-    MIXIN_VEC2()
 };
 
-struct Velocity : Component
+struct Position : Vec2
+{ };
+
+struct Velocity : Vec2
+{ };
+
+std::ostream& operator<<(std::ostream& out, Vec2& v)
 {
-    MIXIN_VEC2()
-};
+    out << "(" << v.x << ", " << v.y << ")";
+    return out;
+}
 
 struct Motion
     : LogicSystem<Position, Velocity>
@@ -65,10 +69,19 @@ int main(int argc, char *argv[]) {
     NullSource null_src;
     CSpace space;
 
-    auto ent = space.template create_entity<CIx>();
+    std::vector<Entity<CIx> > ents;
 
-    std::cout << ent.get_component<Position>()->x << ", "
-              << ent.get_component<Position>()->y << "\n";
+    for (int i = 0; i < 10; i++) 
+        ents.push_back(space.template create_entity<CIx>());
+    
+    for (auto& ent : ents) {
+        std::cout << ent.get_component<Position>() << ", "
+                  << ent.get_component<Velocity>() << "\n";
+        
+        // std::cout << ent.get_component<Velocity>()->x << ", "
+        //           << ent.get_component<Velocity>()->y << "\n";
+
+    }
     
     // using Logic = LogicIndex<Motion>;
 

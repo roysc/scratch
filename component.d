@@ -49,7 +49,7 @@ struct ComponentIndex(Cpts...)
     }
     
     // template supports(CIx : ComponentIndex!Cs, Cs...)
-    template supports(CIx) if (is(CIx : ComponentIndex!Cs, Cs...))
+    template supports(CIx, Cs...) if (is(CIx : ComponentIndex!Cs))
     {
         static if (is(CIx == ComponentIndex!Cs, Cs...))
             enum bool supports = supports!Cs;

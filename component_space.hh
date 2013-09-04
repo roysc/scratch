@@ -1,49 +1,37 @@
 #include <utility>
 
-#include "component.hh"
 #include "util.hh"
-
-#include <boost/mpl/for_each.hpp>
-
+#include "component.hh"
+#include "entity.hh"
 
 #ifndef _SCRATCH_COMPONENT_SPACE_
 #define _SCRATCH_COMPONENT_SPACE_
 
 
-namespace functor
+// Manages a single type of component
+template <class Cpt>
+struct Subsystem
 {
-    using boost::mpl::for_each;
+    using Data = std::unordered_map<EntityID, Cpt>;
+    Data data;
+
+    Subsystem()
+    {
+        data.reserve(100);
+    };
     
-    template <class ComponentSpace,
-              class Entity> struct InitComponent;
-    template <class Entity> struct VerifyComponent;
-    template <class ComponentSpace> struct UpdateSubsystem;
-}
+    Cpt* create(EntityID ent_id) {
+        // assert(false && "Must implement specialized create() method");
 
-/**** Entity ****
- *  Anything that "exists" within the system 
- *  Contains a simple aggregation of components
- */
-template <class EntityIndex>
-struct Entity
-{
-    EntityIndex index;
-
-    template <class Cpt>
-    void add_component(Cpt* cpt)
-    {
-        using namespace functor;
-
-        VerifyComponent<decltype(this)> f {this};
-        for_each<Dependencies<Cpt> >(f);
-            
-        util::get<Cpt*>(index) = cpt;
-    }
-
-    template <class Cpt>
-    Cpt* get_component()
-    {
-        return util::get<Cpt*>(index);
+        // data.emplace(ent_id, Cpt());
+        data[ent_id] = Cpt();
+        auto loc = &data[ent_id];
+        
+        std::cout << "creating " << typeid(Cpt).name()
+                  << " with ID = " << ent_id
+                  << " at " << loc << "\n";
+        
+        return loc;
     }
 };
 
@@ -61,9 +49,9 @@ struct ComponentSpace
 
 
     // members
-    Subsystems subsystems;
+    Subsystems m_subsystems;
     // Entities entities;
-    std::vector<bool> used_ids;
+    std::vector<bool> m_used_ids;
 
     
     void update()
@@ -77,14 +65,14 @@ struct ComponentSpace
     template <class EntityIndex>
     Entity<EntityIndex>& create_entity()
     {
-        Entity<EntityIndex> entity;
+        using Ent = Entity<EntityIndex>;
+        Ent entity;
         EntityID id = fresh_id();
 
         using namespace functor;
 
-        InitComponent<decltype(this),
-                      EntityIndex> f {this, entity, id};
-        for_each<typename EntityIndex::Components>(f);
+        InitComponent<decltype(this), Ent> f {this, entity, id};
+        for_each<EntityIndex>(f);
 
         return entity;
     }
@@ -92,20 +80,20 @@ struct ComponentSpace
     EntityID fresh_id()
     {
         EntityID id = 0;
-        for (; id < used_ids.size(); ++id) {
-            if (!used_ids[id]) {
-                used_ids[id] = true;
+        for (; id < m_used_ids.size(); ++id) {
+            if (!m_used_ids[id]) {
+                m_used_ids[id] = true;
                 return id;
             }
         }
-        used_ids.push_back(true);
+        m_used_ids.push_back(true);
         return id;
     }
 
     template <class Cpt>
     Subsystem<Cpt>& get_subsystem()
     {
-        return util::get<Subsystem<Cpt> >(subsystems);
+        return util::get<Subsystem<Cpt> >(m_subsystems);
     }
     
 
@@ -119,30 +107,13 @@ struct ComponentSpace
 
 };
 
-
 namespace functor
 {
-    // By C++14, this can be replaced with e.g.:
-    // for_each<EntityIndex>(
-    //     [&] <class Cpt> (Cpt _) {
-    //         auto sub = self.subsystems.template get<Cpt>();
-    //         entity.add_component(sub.create(src));
-    // ...
-    //     [&] <class Subsystem> (Subsystem _) {
-    //         subsystems.template get<Subsystem>().update();
-    //     });
-
-    // // does not work for constructors with diff. arity than tpl. params
-    // template <template <class...> class Functor, class... Args>
-    // Functor<Args...> make(Args... args) {
-    //     return Functor<Args...> {std::forward(args)...};
-    // }
-    
-    template <class ComponentSpace, class EntityIndex>
+    template <class ComponentSpace, class Entity>
     struct InitComponent
     {
         ComponentSpace self;
-        Entity<EntityIndex>& entity;
+        Entity& entity;
         EntityID id;
         
         template <class Cpt>
@@ -152,34 +123,8 @@ namespace functor
             entity.add_component(sub.create(id));
         }
     };
-
-    template <class Entity>
-    struct VerifyComponent
-    {
-        Entity self;
-        
-        template <class Cpt>
-        void operator()(Cpt _)
-        {
-            auto cpt_ptr = util::get<Cpt*>(self->index);
-            assert(cpt_ptr != nullptr &&
-                   "Component dependency is not initialized!\n");
-        }
-    };
-
-    template <class ComponentSpace>
-    struct UpdateSubsystem
-    {
-        ComponentSpace self;
-
-        template <class Subsystem>
-        void operator()(Subsystem _)
-        {
-            util::get<Subsystem>(self->subsystems).update();
-        }
-    };
-
 }
+
 
 // /** Create entity */
 // // does this need to be aware of a specific system?

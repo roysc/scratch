@@ -2,6 +2,7 @@
 #include <tuple>
 
 #include <boost/mpl/vector.hpp>
+#include <boost/mpl/for_each.hpp>
 
 #ifndef _SCRATCH_UTIL_
 #define _SCRATCH_UTIL_
@@ -97,18 +98,93 @@ namespace util
     template <class... Ts>
     struct TypeVector : public std::tuple<Ts...>
                       , public boost::mpl::vector<Ts...>
+    { };
+
+
+    /** Expand variadic template types 
+     *  http://loungecpp.wikidot.com/tips-and-tricks%3aindices
+     */
+    template <size_t... Is>
+    struct indices {};
+
+    template <size_t N, size_t... Is>
+    struct _build_indices : _build_indices<N-1, N-1, Is...> {};
+ 
+    template <size_t... Is>
+    struct _build_indices<0, Is...> : indices<Is...> {};
+ 
+    template <class Variadic>
+    struct _indices_for;
+
+    template <template <class...> class Variadic, class... Ts>
+    struct _indices_for<Variadic<Ts...> >
+    { using type = _build_indices<sizeof...(Ts)>; };
+    
+    template <class Variadic>
+    using indices_for = typename _indices_for<Variadic>::type;
+    
+
+    // until C++14
+    template <class T, class... Ts>
+    T& get(std::tuple<Ts...>& tv)
+    { return std::get<_index_of<T, Ts...>::value>(tv); }
+    
+    template <class T>
+    using add_pointer_t = typename std::add_pointer<T>::type;
+
+}
+
+
+namespace functor
+{
+    // By C++14, this can be replaced with e.g.:
+    // for_each<EntityIndex>(
+    //     [&] <class Cpt> (Cpt _) {
+    //         auto sub = self.m_subsystems.template get<Cpt>();
+    //         entity.add_component(sub.create(src));
+    // ...
+    //     [&] <class Subsystem> (Subsystem _) {
+    //         m_subsystems.template get<Subsystem>().update();
+    //     });
+
+    // // does not work for constructors with diff. arity than tpl. params
+    // template <template <class...> class Functor, class... Args>
+    // Functor<Args...> make(Args... args) {
+    //     return Functor<Args...> {std::forward(args)...};
+    // }
+    using boost::mpl::for_each;
+    
+    template <class ComponentSpace, class Entity>
+    struct InitComponent;
+
+    template <class Entity>
+    struct VerifyComponent
     {
-        template <class T> T& get() {
-            return std::get<_index_of<T, Ts...>::value>(*this);
-        }
-        template <class T> void set(T&& a) {
-            std::get<_index_of<T, Ts...>::value>(*this) = a;
+        Entity self;
+        
+        template <class Cpt>
+        void operator()(Cpt _)
+        {
+            auto cpt_ptr = self->template get_component<Cpt>();
+            assert(cpt_ptr != nullptr &&
+                   "Component dependency is not initialized!\n");
         }
     };
 
-    template <class T, class... Ts>
-    T& get(TypeVector<Ts...>& tv) { return tv.template get<T>(); }
+    template <class ComponentSpace>
+    struct UpdateSubsystem
+    {
+        ComponentSpace self;
+
+        template <class Subsystem>
+        void operator()(Subsystem _)
+        {
+            self->template get_subsystem<Subsystem>().update();
+        }
+    };
 }
+
+
 
 #ifdef _BUILD_TEST
 
@@ -135,14 +211,8 @@ static_assert(std::is_same<
               filter<std::is_integral, std::tuple<int, float, long> >::type,
               std::tuple<int, long> >::value, "");
 
-namespace std
-{
-    template <class T>
-    using add_pointer_t = typename add_pointer<T>::type;
-}
-
 static_assert(std::is_same<
-              transform<std::add_pointer_t,
+              transform<add_pointer_t,
               std::tuple<int, float, char*> >::type,
               std::tuple<int*, float*, char**> >::value, "");
 

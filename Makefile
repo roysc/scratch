@@ -8,7 +8,7 @@ BIN = test
 
 all: $(BIN)
 
-test: util.hh component.hh component_space.hh test.cc 
+test: util.hh entity.hh component.hh component_space.hh test.cc 
 	$(CC) $^ -o $@ $(CFLAGS) $(LFLAGS)
 
 test-%: %.hh
