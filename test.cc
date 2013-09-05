@@ -32,15 +32,15 @@ struct Velocity
 };
 
 std::ostream& operator<<(std::ostream& out, Position v)
-{ return out << "(" << v->x << ", " << v->y << ")"; }
+{ return out << "Position(" << v->x << ", " << v->y << ")"; }
 
 std::ostream& operator<<(std::ostream& out, Velocity v)
-{ return out << "(" << v->x << ", " << v->y << ")"; }
+{ return out << "Velocity(" << v->x << ", " << v->y << ")"; }
 
 struct Motion
     : LogicSystem<Position, Velocity>
 {
-    void update(Position& p, Velocity& v)
+    void update(Position& p, Velocity v)
     {
         p->x += v->x;
         p->y += v->y;
@@ -75,17 +75,22 @@ int main(int argc, char *argv[]) {
     NullSource null_src;
     CSpace space;
 
-    std::vector<Entity<CIx> > ents;
+    std::vector<Entity<CIx> > ents, entsp;
+    // std::vector<Entity<ComponentIndex<Position> > > entsp;
 
-    for (int i = 0; i < 10; i++) 
+    for (int i = 0; i < 10; i++)
         ents.push_back(space.template create_entity<Position, Velocity>());
     
-    for (auto& ent : ents) {
+    for (int i = 0; i < 10; i++)
+        entsp.push_back(space.template create_entity<Position>());
+    
+    for (auto& ent : ents) 
         std::cout << *ent.get_component<Position>() << ", "
                   << *ent.get_component<Velocity>() << "\n";
         
-
-    }
+    for (auto& ent : entsp) 
+        std::cout << *ent.get_component<Position>() << "\n";
+    
     
     // using Logic = LogicIndex<Motion>;
 

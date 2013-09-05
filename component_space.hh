@@ -27,14 +27,16 @@ struct Subsystem
     Reference create(EntityID ent_id) {
         // assert(false && "Must implement specialized create() method");
 
+        // std::cout << "creating " << typeid(Component).name()
+        //           << " with ID = " << ent_id
+        //           << " at " << ref << "\n";
+
         // data.emplace(ent_id, Component());
+        // return Reference {&data[ent_id]};
+        
         Reference ref =
             data[ent_id] = Reference {new Component()};
-        
-        std::cout << "creating " << typeid(Component).name()
-                  << " with ID = " << ent_id
-                  << " at " << ref << "\n";
-        
+
         return ref;
     }
 };
@@ -48,28 +50,40 @@ struct ComponentSpace
 {
     using Subsystems = typename
         util::transform_t<Subsystem, util::TypeVector<Components...> >;
-
+    
+    using Index = typename util::TypeVector<Components...>;
     
     // members
     Subsystems m_subsystems;
     // Entities entities;
     std::vector<bool> m_used_ids;
 
+    struct UpdateSubsystem
+    {
+        ComponentSpace<Components...>& self;
+
+        template <class Subsystem>
+        void operator()(Subsystem)
+        {
+            self.template get_subsystem<Subsystem>().update();
+        }
+    };
     
     void update()
     {
-        // auto f = functor::make<UpdateSubsystem>(this);
-        functor::UpdateSubsystem<decltype(this)> f {this};
-        util::expand_apply<Subsystems>(f);
+
+        util::expand_apply<Subsystems>(
+            functor::make<UpdateSubsystem>(*this)
+        );
     }
     
     // template <class EntityIndex>
     // Entity<EntityIndex>& create_entity()
     template <class... EntityCpts>
-    Entity<ComponentIndex<EntityCpts...> >
-    create_entity()
+    // Entity<ComponentIndex<Components...> >
+    auto create_entity()
     {
-        using EntityType = Entity<ComponentIndex<EntityCpts...> >;
+        using EntityType = Entity<ComponentIndex<Components...> >;
         // EntityType entity;
 
         EntityID id = fresh_id();

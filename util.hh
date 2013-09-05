@@ -140,20 +140,18 @@ namespace util
     // using boost::mpl::for_each;
 
     template <class Variadic, class Functor, size_t... Is>
-    void _expand_apply(Functor f, Variadic&& tuple, indices<Is...>)
+    void _expand_apply(Functor&& f, Variadic&& tuple, indices<Is...>)
     {
         using Ignore = int[sizeof...(Is)];
-        (void)Ignore {
-            (void(f(std::get<Is>(tuple))), 0)...
-        };
+        Ignore { (f(std::get<Is>(tuple)), 0)... };
     }
 
     template <class Variadic, class Functor>
-    void expand_apply(Functor f, Variadic&& tuple)
+    void expand_apply(Functor&& f, Variadic&& tuple)
     { _expand_apply(f, tuple, indices_for<Variadic> {}); }
 
     template <class Variadic, class Functor>
-    void expand_apply(Functor f)
+    void expand_apply(Functor&& f)
     { expand_apply(f, Variadic()); }
     
 }
@@ -170,35 +168,15 @@ namespace functor
     //     [&] <class Subsystem> (Subsystem _) {
     //         m_subsystems.template get<Subsystem>().update();
     //     });
+
+    template <class Functor, class... Args>
+    auto make(Args&&... args)
+    {
+        return Functor {std::forward<Args>(args)...};
+    }
     
     template <class ComponentSpace, class Entity>
     struct InitComponent;
-
-    template <class Entity>
-    struct VerifyComponent
-    {
-        Entity self;
-        
-        template <class Cpt>
-        void operator()(Cpt _)
-        {
-            auto cpt_ptr = self->template get_component<Cpt>();
-            assert(cpt_ptr != nullptr &&
-                   "Component dependency is not initialized!\n");
-        }
-    };
-
-    template <class ComponentSpace>
-    struct UpdateSubsystem
-    {
-        ComponentSpace self;
-
-        template <class Subsystem>
-        void operator()(Subsystem _)
-        {
-            self->template get_subsystem<Subsystem>().update();
-        }
-    };
 }
 
 

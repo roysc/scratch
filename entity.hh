@@ -22,23 +22,38 @@ template <class EntityIndex>
 struct Entity
     // : util::transform_t<Ref, EntityIndex>;
 {
-    using Members =
-        util::transform_t<Ref, EntityIndex>;
-
-    Members m_components;
+    using Contents = util::transform_t<Ref, EntityIndex>;
+    Contents m_components;
 
     template <class... Cpts>
     Entity(Cpts&&... args)
-        : m_components { std::forward<Cpts>(args)... }
-    {}
+        // : m_components { std::forward<Cpts>(args)... }
+    {
+        using Ignore = int[sizeof...(Cpts)];
+        (void)Ignore {
+            (util::get<Cpts>(m_components) = args, 0)...
+        };
+    }
+
+    struct VerifyComponent
+    {
+        Entity<EntityIndex>& self;
+        
+        template <class Cpt>
+        void operator()(Cpt)
+        {
+            auto cpt_ptr = self.template get_component<Cpt>();
+            assert(cpt_ptr != nullptr &&
+                   "Component dependency is not initialized!\n");
+        }
+    };
     
     template <class Cpt>
     void add_component(Ref<Cpt> cpt)
     {
-        using namespace functor;
-
-        VerifyComponent<decltype(this)> f {this};
-        util::expand_apply<Dependencies<Cpt> >(f);
+        util::expand_apply<Dependencies<Cpt> >(
+            functor::make<VerifyComponent>(*this)
+        );
             
         util::get<Ref<Cpt> >(m_components) = cpt;
     }
@@ -46,9 +61,7 @@ struct Entity
     
     template <class Cpt>
     Ref<Cpt> get_component()
-    {
-        return util::get<Ref<Cpt> >(m_components);
-    }
+    { return util::get<Ref<Cpt> >(m_components); }
 };
 
 #endif
