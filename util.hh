@@ -81,7 +81,7 @@ namespace util
     using transform_t = typename transform<How, Variadic>::type;
     
     
-    /** Enable lookup by type (will be in std::get by C++14) */
+    /** Enable lookup by type (until C++14 std::get) */
     template <class, class...> struct _index_of;
 
     template <class T, class... Ts>
@@ -93,6 +93,10 @@ namespace util
         : public std::integral_constant<int, 1 + _index_of<T, Ts...>::value>
     {};
 
+    template <class, class> struct _index_within;
+    
+    template <class T, template <class...> class Variadic, class... Ts>
+    struct _index_within<T, Variadic<Ts...> > : _index_of<T, Ts...> {};
     
     /** A tuple with indexing by type */
     template <class... Ts>
@@ -121,7 +125,8 @@ namespace util
     { using type = _build_indices<sizeof...(Ts)>; };
     
     template <class Variadic>
-    using indices_for = typename _indices_for<Variadic>::type;
+    using indices_for = typename
+        _indices_for<typename std::remove_reference<Variadic>::type>::type;
     
 
     // until C++14
@@ -132,6 +137,27 @@ namespace util
     template <class T>
     using add_pointer_t = typename std::add_pointer<T>::type;
 
+    
+    /** Static-for functions */
+    using boost::mpl::for_each;
+
+    template <class Variadic, class Functor, size_t... Is>
+    void _expand_apply(Functor f, Variadic&& tuple, indices<Is...>)
+    {
+        using Ignore = int[sizeof...(Is)];
+        (void)Ignore {
+            (void(f(std::get<Is>(tuple))), 0)...
+        };
+    }
+
+    template <class Variadic, class Functor>
+    void expand_apply(Functor f, Variadic&& tuple)
+    { _expand_apply(f, tuple, indices_for<Variadic> {}); }
+
+    template <class Variadic, class Functor>
+    void expand_apply(Functor f)
+    { expand_apply(f, Variadic()); }
+    
 }
 
 
@@ -146,13 +172,6 @@ namespace functor
     //     [&] <class Subsystem> (Subsystem _) {
     //         m_subsystems.template get<Subsystem>().update();
     //     });
-
-    // // does not work for constructors with diff. arity than tpl. params
-    // template <template <class...> class Functor, class... Args>
-    // Functor<Args...> make(Args... args) {
-    //     return Functor<Args...> {std::forward(args)...};
-    // }
-    using boost::mpl::for_each;
     
     template <class ComponentSpace, class Entity>
     struct InitComponent;

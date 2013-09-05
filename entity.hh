@@ -17,9 +17,9 @@ using Reference = typename
  */
 template <class EntityIndex>
 struct Entity
+    : util::transform_t<Reference, EntityIndex>;
 {
     using Members =
-        // util::transform_t<util::add_pointer_t, EntityIndex>;
         util::transform_t<Reference, EntityIndex>;
 
     Members m_components;
@@ -30,7 +30,7 @@ struct Entity
         using namespace functor;
 
         VerifyComponent<decltype(this)> f {this};
-        for_each<Dependencies<Cpt> >(f);
+        util::expand_apply<Dependencies<Cpt> >(f);
             
         util::get<Reference<Cpt> >(m_components) = cpt;
     }

@@ -56,10 +56,8 @@ struct ComponentSpace
     
     void update()
     {
-        using namespace functor;
-
-        UpdateSubsystem<decltype(this)> f {this};
-        for_each<Subsystems>(f);
+        functor::UpdateSubsystem<decltype(this)> f {this};
+        util::expand_apply<Subsystems>(f);
     }
     
     template <class EntityIndex>
@@ -69,13 +67,18 @@ struct ComponentSpace
         Ent entity;
         EntityID id = fresh_id();
 
-        using namespace functor;
-
-        InitComponent<decltype(this), Ent> f {this, entity, id};
-        for_each<EntityIndex>(f);
+        functor::InitComponent<decltype(this), Ent>
+            f {this, entity, id};
+        util::expand_apply<EntityIndex>(f);
 
         return entity;
     }
+
+    // {
+    //     Entity<EntityIndex> entity {
+    //         this->template get_subsystem<Cpts>().create(id)...
+    //     };
+    // };
     
     EntityID fresh_id()
     {
