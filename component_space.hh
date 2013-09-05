@@ -58,6 +58,7 @@ struct ComponentSpace
     
     void update()
     {
+        // auto f = functor::make<UpdateSubsystem>(this);
         functor::UpdateSubsystem<decltype(this)> f {this};
         util::expand_apply<Subsystems>(f);
     }
@@ -65,25 +66,17 @@ struct ComponentSpace
     // template <class EntityIndex>
     // Entity<EntityIndex>& create_entity()
     template <class... EntityCpts>
-    // Entity<ComponentIndex<EntityCpts...> >
-    auto create_entity()
+    Entity<ComponentIndex<EntityCpts...> >
+    create_entity()
     {
         using EntityType = Entity<ComponentIndex<EntityCpts...> >;
         // EntityType entity;
 
         EntityID id = fresh_id();
-
-        // std::tuple<typename std::add_pointer<EntityCpts>::type...> t {
-        //     this->template get_subsystem<EntityCpts>().create(id)...
-        // };
         
         EntityType entity (
             this->template get_subsystem<EntityCpts>().create(id)... 
         );
-        
-        // functor::InitComponent<decltype(this), Ent>
-        //     f {this, entity, id};
-        // util::expand_apply<EntityIndex>(f);
 
         return entity;
     }
