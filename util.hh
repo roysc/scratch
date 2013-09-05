@@ -1,9 +1,6 @@
 #include <type_traits>
 #include <tuple>
 
-#include <boost/mpl/vector.hpp>
-#include <boost/mpl/for_each.hpp>
-
 #ifndef _SCRATCH_UTIL_
 #define _SCRATCH_UTIL_
 
@@ -99,11 +96,12 @@ namespace util
     struct _index_within<T, Variadic<Ts...> > : _index_of<T, Ts...> {};
     
     /** A tuple with indexing by type */
-    template <class... Ts>
-    struct TypeVector : public std::tuple<Ts...>
-                      , public boost::mpl::vector<Ts...>
-    { };
+    // template <class... Ts>
+    // struct TypeVector : public std::tuple<Ts...>
+    // { };
 
+    template <class... Ts>
+    using TypeVector = typename std::tuple<Ts...>;
 
     /** Expand variadic template types 
      *  http://loungecpp.wikidot.com/tips-and-tricks%3aindices
@@ -139,7 +137,7 @@ namespace util
 
     
     /** Static-for functions */
-    using boost::mpl::for_each;
+    // using boost::mpl::for_each;
 
     template <class Variadic, class Functor, size_t... Is>
     void _expand_apply(Functor f, Variadic&& tuple, indices<Is...>)

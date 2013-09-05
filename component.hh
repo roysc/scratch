@@ -32,28 +32,31 @@ struct Dependencies : util::TypeVector<>
  *  Determines Component layout in entities.
  */
 template <class... Cpts>
-struct ComponentIndex
-    : public util::TypeVector<Cpts...> 
-    // : public util::TypeVector<typename std::add_pointer<Cpts>::type...>
-{
-    // using Components = util::TypeVector<Cpts...>;
+using ComponentIndex = util::TypeVector<Cpts...>;
+
+// template <class... Cpts>
+// struct ComponentIndex
+//     : public util::TypeVector<Cpts...>
+//     // : public util::TypeVector<typename std::add_pointer<Cpts>::type...>
+// {
+//     // using Components = util::TypeVector<Cpts...>;
 
     
-    /* Type predicates */
-    /** Whether this ComponentIndex supports a given Component */
-    template <class> struct supports;
+//     /* Type predicates */
+//     /** Whether this ComponentIndex supports a given Component */
+//     template <class> struct supports;
     
-    template <class Cpt>
-    struct supports
-        : public util::is_member<Cpt, Cpts...> { };
+//     template <class Cpt>
+//     struct supports
+//         : public util::is_member<Cpt, Cpts...> { };
 
-    template <template <class...> class CIx,
-              class... OtherCpts>
-    // others must form subset
-    struct supports<CIx<OtherCpts...>>
-        : public util::all_satisfy<supports, OtherCpts...> { };
+//     template <template <class...> class CIx,
+//               class... OtherCpts>
+//     // others must form subset
+//     struct supports<CIx<OtherCpts...>>
+//         : public util::all_satisfy<supports, OtherCpts...> { };
            
-};
+// };
 
 
 /** Represents logic involving several component subsystems 

@@ -1,4 +1,6 @@
-#include <utility>
+#include <vector>
+#include <memory>
+#include <type_traits>
 
 #include "util.hh"
 #include "component.hh"
@@ -9,29 +11,31 @@
 
 
 // Manages a single type of component
-template <class Cpt>
+template <class Component>
 struct Subsystem
 {
-    using Data = std::unordered_map<EntityID, Cpt>;
+    using Reference = Ref<Component>;
+    using Data = std::unordered_map<EntityID, Reference>;
     Data data;
 
     Subsystem()
     {
         data.reserve(100);
     };
-    
-    Cpt* create(EntityID ent_id) {
+
+
+    Reference create(EntityID ent_id) {
         // assert(false && "Must implement specialized create() method");
 
-        // data.emplace(ent_id, Cpt());
-        data[ent_id] = Cpt();
-        auto loc = &data[ent_id];
+        // data.emplace(ent_id, Component());
+        Reference ref =
+            data[ent_id] = Reference {new Component()};
         
-        std::cout << "creating " << typeid(Cpt).name()
+        std::cout << "creating " << typeid(Component).name()
                   << " with ID = " << ent_id
-                  << " at " << loc << "\n";
+                  << " at " << ref << "\n";
         
-        return loc;
+        return ref;
     }
 };
 
@@ -39,15 +43,13 @@ struct Subsystem
  * An environment which manages the specified components.
  * 
  */
-template <class... Cpts>
+template <class... Components>
 struct ComponentSpace
 {
     using Subsystems = typename
-        util::transform_t<Subsystem, util::TypeVector<Cpts...> >;
+        util::transform_t<Subsystem, util::TypeVector<Components...> >;
 
-    // using Entities = std::vector
-
-
+    
     // members
     Subsystems m_subsystems;
     // Entities entities;
@@ -60,25 +62,31 @@ struct ComponentSpace
         util::expand_apply<Subsystems>(f);
     }
     
-    template <class EntityIndex>
-    Entity<EntityIndex>& create_entity()
+    // template <class EntityIndex>
+    // Entity<EntityIndex>& create_entity()
+    template <class... EntityCpts>
+    // Entity<ComponentIndex<EntityCpts...> >
+    auto create_entity()
     {
-        using Ent = Entity<EntityIndex>;
-        Ent entity;
+        using EntityType = Entity<ComponentIndex<EntityCpts...> >;
+        // EntityType entity;
+
         EntityID id = fresh_id();
 
-        functor::InitComponent<decltype(this), Ent>
-            f {this, entity, id};
-        util::expand_apply<EntityIndex>(f);
+        // std::tuple<typename std::add_pointer<EntityCpts>::type...> t {
+        //     this->template get_subsystem<EntityCpts>().create(id)...
+        // };
+        
+        EntityType entity (
+            this->template get_subsystem<EntityCpts>().create(id)... 
+        );
+        
+        // functor::InitComponent<decltype(this), Ent>
+        //     f {this, entity, id};
+        // util::expand_apply<EntityIndex>(f);
 
         return entity;
     }
-
-    // {
-    //     Entity<EntityIndex> entity {
-    //         this->template get_subsystem<Cpts>().create(id)...
-    //     };
-    // };
     
     EntityID fresh_id()
     {
@@ -95,9 +103,7 @@ struct ComponentSpace
 
     template <class Cpt>
     Subsystem<Cpt>& get_subsystem()
-    {
-        return util::get<Subsystem<Cpt> >(m_subsystems);
-    }
+    { return util::get<Subsystem<Cpt> >(m_subsystems); }
     
 
     /**** Operation ****

@@ -8,9 +8,9 @@
 
 #include "component_space.hh"
 
-struct Vec2 : Component
+struct Vec2
 {
-    using Number = uint;                        
+    using Number = uint;
     union {                                     
         std::array<Number, 2> v;                
         struct { Number x, y; };                
@@ -19,22 +19,28 @@ struct Vec2 : Component
     using InputType = decltype(v);              
 };
 
-struct Position : Vec2
-{ };
-
-struct Velocity : Vec2
-{ };
-
-std::ostream& operator<<(std::ostream& out, Vec2& v)
+struct Position
 {
-    out << "(" << v.x << ", " << v.y << ")";
-    return out;
-}
+    Vec2 m_;
+    Vec2* const operator->() { return &m_; }
+};
+
+struct Velocity
+{
+    Vec2 m_;
+    Vec2* const operator->() { return &m_; }
+};
+
+std::ostream& operator<<(std::ostream& out, Position v)
+{ return out << "(" << v->x << ", " << v->y << ")"; }
+
+std::ostream& operator<<(std::ostream& out, Velocity v)
+{ return out << "(" << v->x << ", " << v->y << ")"; }
 
 struct Motion
     : LogicSystem<Position, Velocity>
 {
-    void update(Position* p, Velocity* v)
+    void update(Position& p, Velocity& v)
     {
         p->x += v->x;
         p->y += v->y;
@@ -72,14 +78,12 @@ int main(int argc, char *argv[]) {
     std::vector<Entity<CIx> > ents;
 
     for (int i = 0; i < 10; i++) 
-        ents.push_back(space.template create_entity<CIx>());
+        ents.push_back(space.template create_entity<Position, Velocity>());
     
     for (auto& ent : ents) {
-        std::cout << ent.get_component<Position>() << ", "
-                  << ent.get_component<Velocity>() << "\n";
+        std::cout << *ent.get_component<Position>() << ", "
+                  << *ent.get_component<Velocity>() << "\n";
         
-        // std::cout << ent.get_component<Velocity>()->x << ", "
-        //           << ent.get_component<Velocity>()->y << "\n";
 
     }
     
