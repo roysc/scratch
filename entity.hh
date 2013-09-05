@@ -3,6 +3,10 @@
 #include <memory>
 #include <bitset>
 
+#ifdef _DEBUG
+#include <iostream>
+#endif
+
 #include "util.hh"
 #include "component.hh"
 
@@ -35,17 +39,22 @@ struct Entity
     explicit Entity(Cpts&&... args)
         // : m_components { std::forward<Cpts>(args)... }
     {
-        using ignore = int[sizeof...(Cpts)];
-        ignore { (
-            util::get<Cpts>(m_components) = std::forward<Cpts>(args),
-        0)... };
+        // using ignore = int[sizeof...(Cpts)];
+        util::ignore {
+            (util::get<Cpts>(m_components) = std::forward<Cpts>(args),
+             // std::cout << "setting Component: " << typeid(typename Cpts::element_type).name() << "\n",
+             0)... };
 
         using CptsVector = util::TypeVector<Cpts...>;
-        ignore { (
-            m_description.set(util::index_within<Cpts, CptsVector>::value),
-        0)... };
+        util::ignore {
+            (m_description.set(util::index_within<Cpts, CptsVector>::value),
+             0)... };
+
+        std::cout << m_description << "\n";
     }
 
+    bool is_empty() { return m_description.none(); }
+    
     struct VerifyComponent
     {
         Entity& self;
@@ -59,16 +68,16 @@ struct Entity
         }
     };
 
-    bool is_empty() { return m_description.none(); }
-    
     template <class Cpt>
     void add_component(Ref<Cpt> cpt)
     {
-        util::expand_apply<Dependencies<Cpt> >(
-            functor::make<VerifyComponent>(*this)
+        using namespace util;
+        
+        expand_apply<Dependencies<Cpt> >(
+            make<VerifyComponent>(*this)
         );
             
-        util::get<Ref<Cpt> >(m_components) = cpt;
+        get<Ref<Cpt> >(m_components) = cpt;
     }
 
     
@@ -76,5 +85,28 @@ struct Entity
     Ref<Cpt> get_component()
     { return util::get<Ref<Cpt> >(m_components); }
 };
+
+#ifdef _DEBUG
+
+template <class... Cs>
+std::ostream& operator<<(std::ostream& out, Entity<Cs...>& e)
+{
+    using E = Entity<Cs...>;
+    bool at_0 = true;
+    
+    out << "Entity<";
+    util::ignore { (
+        e.template get_component<Cs>()
+        ? (out
+           << (at_0 ? "" : ", ")
+           << *e.template get_component<Cs>()
+        , at_0 = false)
+        : out,
+    0)... };
+
+    return out << ">";
+}
+
+#endif
 
 #endif

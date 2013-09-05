@@ -1,7 +1,7 @@
 CC		= g++
 
 # OPTIMIZE     = -O3
-CFLAGS	= -std=c++11 $(OPTIMIZE) -w
+CFLAGS	= -std=c++11 $(OPTIMIZE) -w -D_DEBUG
 LFLAGS  = 
 
 BIN = test

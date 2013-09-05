@@ -72,21 +72,18 @@ int main(int argc, char *argv[]) {
     // NullSource null_src;
     CSpace space;
 
-    std::vector<EntityID> ents, entsp;
+    std::vector<EntityID> entsp, entsv, entspv;
     // std::vector<Entity<ComponentIndex<Position> > > entsp;
-
-    for (int i = 0; i < 10; i++)
-        ents.push_back(space.template create_entity<Position, Velocity>());
     
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 5; i++) {
         entsp.push_back(space.template create_entity<Position>());
+        entsv.push_back(space.template create_entity<Velocity>());
+        entspv.push_back(space.template create_entity<Position, Velocity>());
+    }
     
-    for (auto& ent : ents) 
-        std::cout << *space[ent].get_component<Position>() << ", "
-                  << *space[ent].get_component<Velocity>() << "\n";
-        
-    for (auto& ent : entsp) 
-        std::cout << *space[ent].get_component<Position>() << "\n";
+    for (auto& ent : entsp) std::cout << space[ent] << "\n";
+    for (auto& ent : entsv) std::cout << space[ent] << "\n";
+    for (auto& ent : entspv) std::cout << space[ent] << "\n";
     
     
     // using Logic = LogicIndex<Motion>;

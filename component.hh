@@ -15,18 +15,14 @@
 
 using EntityID = ulong;
 
-struct Component
+template <class Component>
+struct Dependencies
 {
-    // using Ident = uint;
-    // static const Ident ID = 0;
-
-    using InputType = void;
+    using Type = util::TypeVector<>;
 };
 
-template <class Cpt>
-struct Dependencies : util::TypeVector<>
-{ };
-
+template <class Component>
+using DependenciesOf = typename Dependencies<Component>::Type;
 
 /** Provides unique identifiers for Components;
  *  Determines Component layout in entities.

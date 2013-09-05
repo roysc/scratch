@@ -69,8 +69,9 @@ struct ComponentSpace
     
     void update()
     {
+        
         // util::expand_apply<Subsystems>(
-        //     functor::make<UpdateSubsystem>(*this)
+        //     util::make<UpdateSubsystem>(*this)
         // );
     }
     
@@ -114,24 +115,6 @@ struct ComponentSpace
     };
 
 };
-
-namespace functor
-{
-    template <class ComponentSpace, class Entity>
-    struct InitComponent
-    {
-        ComponentSpace self;
-        Entity& entity;
-        EntityID id;
-        
-        template <class Cpt>
-        void operator()(Cpt _)
-        {
-            Subsystem<Cpt> sub = self->template get_subsystem<Cpt>();
-            entity.add_component(sub.create(id));
-        }
-    };
-}
 
 
 // /** Create entity */

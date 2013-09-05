@@ -1,5 +1,6 @@
 #include <type_traits>
 #include <tuple>
+#include <initializer_list>
 
 #ifndef _SCRATCH_UTIL_
 #define _SCRATCH_UTIL_
@@ -143,12 +144,13 @@ namespace util
     /** Static-for functions */
     // using boost::mpl::for_each;
 
+    // for convenience
+    using ignore = int[];
+    // struct ignore { ignore(std::initializer_list<int>); };
+
     template <class Variadic, class Functor, size_t... Is>
     void _expand_apply(Functor&& f, Variadic&& tuple, indices<Is...>)
-    {
-        using Ignore = int[sizeof...(Is)];
-        Ignore { (f(std::get<Is>(tuple)), 0)... };
-    }
+    { ignore { (f(std::get<Is>(tuple)), 0)... }; }
 
     template <class Variadic, class Functor>
     void expand_apply(Functor&& f, Variadic&& tuple)
@@ -157,14 +159,10 @@ namespace util
     template <class Variadic, class Functor>
     void expand_apply(Functor&& f)
     { expand_apply(f, Variadic()); }
+
     
-}
-
-
-namespace functor
-{
-    // By C++14, this can be replaced with e.g.:
-    // for_each<EntityIndex>(
+    // By C++14, such functors can be replaced with e.g.:
+    // expand_apply<EntityIndex>(
     //     [&] <class Cpt> (Cpt _) {
     //         auto sub = self.m_subsystems.template get<Cpt>();
     //         entity.add_component(sub.create(src));
@@ -172,17 +170,13 @@ namespace functor
     //     [&] <class Subsystem> (Subsystem _) {
     //         m_subsystems.template get<Subsystem>().update();
     //     });
-
     template <class Functor, class... Args>
     auto make(Args&&... args)
-    {
-        return Functor {std::forward<Args>(args)...};
-    }
-    
-    template <class ComponentSpace, class Entity>
-    struct InitComponent;
-}
+        -> decltype(Functor {std::forward<Args>(args)...})
+    { return Functor {std::forward<Args>(args)...}; }
 
+    
+}
 
 
 #ifdef _BUILD_TEST
