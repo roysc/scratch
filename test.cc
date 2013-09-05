@@ -47,14 +47,11 @@ struct Motion
     }
 };
 
-struct NullSource
-{
-    template <class InputType>
-    InputType next()
-    {
-        return InputType();
-    }
-};
+// struct NullSource
+// {
+//     template <class InputType>
+//     InputType next() { return InputType(); }
+// };
 
     
 int main(int argc, char *argv[]) {
@@ -72,10 +69,10 @@ int main(int argc, char *argv[]) {
     
     using CSpace = ComponentSpace<Position, Velocity>;
 
-    NullSource null_src;
+    // NullSource null_src;
     CSpace space;
 
-    std::vector<Entity<CIx> > ents, entsp;
+    std::vector<EntityID> ents, entsp;
     // std::vector<Entity<ComponentIndex<Position> > > entsp;
 
     for (int i = 0; i < 10; i++)
@@ -85,11 +82,11 @@ int main(int argc, char *argv[]) {
         entsp.push_back(space.template create_entity<Position>());
     
     for (auto& ent : ents) 
-        std::cout << *ent.get_component<Position>() << ", "
-                  << *ent.get_component<Velocity>() << "\n";
+        std::cout << *space[ent].get_component<Position>() << ", "
+                  << *space[ent].get_component<Velocity>() << "\n";
         
     for (auto& ent : entsp) 
-        std::cout << *ent.get_component<Position>() << "\n";
+        std::cout << *space[ent].get_component<Position>() << "\n";
     
     
     // using Logic = LogicIndex<Motion>;

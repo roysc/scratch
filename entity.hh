@@ -1,6 +1,7 @@
 #include <utility>
 #include <type_traits>
 #include <memory>
+#include <bitset>
 
 #include "util.hh"
 #include "component.hh"
@@ -18,26 +19,36 @@ using Ref = typename
  *  Anything that "exists" within the system 
  *  Contains a simple aggregation of components
  */
-template <class EntityIndex>
+template <class... Components>
 struct Entity
     // : util::transform_t<Ref, EntityIndex>;
 {
-    using Contents = util::transform_t<Ref, EntityIndex>;
+    using Contents = util::TypeVector<Ref<Components>...>;
     Contents m_components;
 
+    using Description = std::bitset<sizeof...(Components)>;
+    Description m_description;
+
+    // Entity(const Entity& that) : m_components(that.m_components) {};
+
     template <class... Cpts>
-    Entity(Cpts&&... args)
+    explicit Entity(Cpts&&... args)
         // : m_components { std::forward<Cpts>(args)... }
     {
-        using Ignore = int[sizeof...(Cpts)];
-        (void)Ignore {
-            (util::get<Cpts>(m_components) = args, 0)...
-        };
+        using ignore = int[sizeof...(Cpts)];
+        ignore { (
+            util::get<Cpts>(m_components) = std::forward<Cpts>(args),
+        0)... };
+
+        using CptsVector = util::TypeVector<Cpts...>;
+        ignore { (
+            m_description.set(util::index_within<Cpts, CptsVector>::value),
+        0)... };
     }
 
     struct VerifyComponent
     {
-        Entity<EntityIndex>& self;
+        Entity& self;
         
         template <class Cpt>
         void operator()(Cpt)
@@ -47,6 +58,8 @@ struct Entity
                    "Component dependency is not initialized!\n");
         }
     };
+
+    bool is_empty() { return m_description.none(); }
     
     template <class Cpt>
     void add_component(Ref<Cpt> cpt)

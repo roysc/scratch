@@ -48,69 +48,61 @@ struct Subsystem
 template <class... Components>
 struct ComponentSpace
 {
-    using Subsystems = typename
-        util::transform_t<Subsystem, util::TypeVector<Components...> >;
-    
-    using Index = typename util::TypeVector<Components...>;
+    // using Subsystems = util::TypeVector<Subsystem<Components>...>;
+    using Index = util::TypeVector<Components...>;
+    using EntityType = Entity<Components...>;
+    using Entities = std::vector<EntityType>;
     
     // members
-    Subsystems m_subsystems;
-    // Entities entities;
-    std::vector<bool> m_used_ids;
+    // Subsystems m_subsystems;
+    Entities m_entities;
+    
 
-    struct UpdateSubsystem
-    {
-        ComponentSpace<Components...>& self;
+    // struct UpdateSubsystem
+    // {
+    //     ComponentSpace& self;
 
-        template <class Subsystem>
-        void operator()(Subsystem)
-        {
-            self.template get_subsystem<Subsystem>().update();
-        }
-    };
+    //     template <class Subsystem>
+    //     void operator()(Subsystem)
+    //     { self.template get_subsystem<Subsystem>().update(); }
+    // };
     
     void update()
     {
-
-        util::expand_apply<Subsystems>(
-            functor::make<UpdateSubsystem>(*this)
-        );
+        // util::expand_apply<Subsystems>(
+        //     functor::make<UpdateSubsystem>(*this)
+        // );
     }
     
-    // template <class EntityIndex>
-    // Entity<EntityIndex>& create_entity()
-    template <class... EntityCpts>
-    // Entity<ComponentIndex<Components...> >
-    auto create_entity()
+    
+    template <class... InitCpts>
+    EntityID create_entity()
     {
-        using EntityType = Entity<ComponentIndex<Components...> >;
-        // EntityType entity;
-
-        EntityID id = fresh_id();
-        
         EntityType entity (
-            this->template get_subsystem<EntityCpts>().create(id)... 
+            Ref<InitCpts> {new InitCpts()}...
+            // this->template get_subsystem<InitCpts>().create(id)... 
         );
 
-        return entity;
-    }
-    
-    EntityID fresh_id()
-    {
         EntityID id = 0;
-        for (; id < m_used_ids.size(); ++id) {
-            if (!m_used_ids[id]) {
-                m_used_ids[id] = true;
+        for (; id < m_entities.size(); ++id) {
+            if (m_entities[id].is_empty()) {
+                m_entities[id] = entity;
                 return id;
             }
         }
-        m_used_ids.push_back(true);
+        
+        m_entities.push_back(entity);
         return id;
     }
 
-    template <class Cpt>
-    Subsystem<Cpt>& get_subsystem()
-    { return util::get<Subsystem<Cpt> >(m_subsystems); }
+    EntityType& operator[](EntityID id)
+    {
+        return m_entities[id];
+    }
+    
+    // template <class Cpt>
+    // Subsystem<Cpt>& get_subsystem()
+    // { return util::get<Subsystem<Cpt> >(m_subsystems); }
     
 
     /**** Operation ****

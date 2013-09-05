@@ -79,21 +79,22 @@ namespace util
     
     
     /** Enable lookup by type (until C++14 std::get) */
-    template <class, class...> struct _index_of;
+    template <class, class...> struct index_of;
 
     template <class T, class... Ts>
-    struct _index_of<T, T, Ts...>
+    struct index_of<T, T, Ts...>
         : public std::integral_constant<int, 0>
     {};
     template <class T, class U, class... Ts>
-    struct _index_of<T, U, Ts...>
-        : public std::integral_constant<int, 1 + _index_of<T, Ts...>::value>
+    struct index_of<T, U, Ts...>
+        : public std::integral_constant<int, 1 + index_of<T, Ts...>::value>
+        // , public std::enable_if<is_member<T, Ts...>::value>
     {};
 
-    template <class, class> struct _index_within;
+    template <class, class> struct index_within;
     
     template <class T, template <class...> class Variadic, class... Ts>
-    struct _index_within<T, Variadic<Ts...> > : _index_of<T, Ts...> {};
+    struct index_within<T, Variadic<Ts...> > : index_of<T, Ts...> {};
     
     /** A tuple with indexing by type */
     // template <class... Ts>
@@ -102,6 +103,9 @@ namespace util
 
     template <class... Ts>
     using TypeVector = typename std::tuple<Ts...>;
+
+    template <class Variadic>
+    using variadic_size = std::tuple_size<Variadic>;
 
     /** Expand variadic template types 
      *  http://loungecpp.wikidot.com/tips-and-tricks%3aindices
@@ -130,7 +134,7 @@ namespace util
     // until C++14
     template <class T, class... Ts>
     T& get(std::tuple<Ts...>& tv)
-    { return std::get<_index_of<T, Ts...>::value>(tv); }
+    { return std::get<index_of<T, Ts...>::value>(tv); }
     
     template <class T>
     using add_pointer_t = typename std::add_pointer<T>::type;
