@@ -134,8 +134,14 @@ namespace util
 
     // until C++14
     template <class T, class... Ts>
-    T& get(std::tuple<Ts...>& tv)
-    { return std::get<index_of<T, Ts...>::value>(tv); }
+    T& get(std::tuple<Ts...>& t)
+    { return std::get<index_of<T, Ts...>::value>(t); }
+
+    template <class T, class... Ts>
+    T&& get(std::tuple<Ts...>&& t)
+    { return std::forward<T&&>(get<T>(t)); }
+
+    
     
     template <class T>
     using add_pointer_t = typename std::add_pointer<T>::type;

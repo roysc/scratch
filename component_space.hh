@@ -79,20 +79,16 @@ struct ComponentSpace
     template <class... InitCpts>
     EntityID create_entity()
     {
-        EntityType entity (
-            Ref<InitCpts> {new InitCpts()}...
-            // this->template get_subsystem<InitCpts>().create(id)... 
+        auto it = m_entities.begin();
+        for (; it != m_entities.end(); ++it) 
+            if (it->is_empty())
+                break;
+        
+        m_entities.insert(
+            it, EntityType(Ref<InitCpts> {new InitCpts()}...)
         );
 
-        EntityID id = 0;
-        for (; id < m_entities.size(); ++id) {
-            if (m_entities[id].is_empty()) {
-                m_entities[id] = entity;
-                return id;
-            }
-        }
-        
-        m_entities.push_back(entity);
+        EntityID id = it - m_entities.begin();
         return id;
     }
 
@@ -115,26 +111,6 @@ struct ComponentSpace
     };
 
 };
-
-
-// /** Create entity */
-// // does this need to be aware of a specific system?
-// template <class FullIndex>
-// template <class... Cs>
-// struct ComponentSpace<FullIndex>::Spawn
-//     : Operation
-//     , std::enable_if<FullIndex::template is_valid_entity<Cs...>::value>
-// {
-//     void execute(ComponentSpace& system) {
-//         // std::unique_ptr<Entity>&
-//         Entity::Ident ent = system.entities.fresh_ident();
-
-//         // for C in Cs...
-//         // system.facades.get<C>().initiate();
-        
-//     }
-// };
-
 
 
 #ifdef _BUILD_TEST

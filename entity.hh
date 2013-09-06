@@ -17,7 +17,8 @@ template <class Cpt>
 using Ref = typename
     // std::add_lvalue_reference<Cpt>::type;
     // std::add_pointer<Cpt>::type;
-    std::shared_ptr<Cpt>;
+    // std::shared_ptr<Cpt>;
+    std::unique_ptr<Cpt>;
 
 /**** Entity ****
  *  Anything that "exists" within the system 
@@ -33,22 +34,20 @@ struct Entity
     using Description = std::bitset<sizeof...(Components)>;
     Description m_description;
 
-    // Entity(const Entity& that) : m_components(that.m_components) {};
-
     template <class... Cpts>
-    explicit Entity(Cpts&&... args)
+    Entity(Cpts&&... args)
         // : m_components { std::forward<Cpts>(args)... }
     {
         // using ignore = int[sizeof...(Cpts)];
-        util::ignore {
-            (util::get<Cpts>(m_components) = std::forward<Cpts>(args),
-             // std::cout << "setting Component: " << typeid(typename Cpts::element_type).name() << "\n",
-             0)... };
+        util::ignore {(
+            util::get<Cpts>(m_components) = std::forward<Cpts>(args),
+            std::cout << "setting Component: " << typeid(typename Cpts::element_type).name() << "\n",
+             0)...};
 
         using CptsVector = util::TypeVector<Cpts...>;
-        util::ignore {
-            (m_description.set(util::index_within<Cpts, CptsVector>::value),
-             0)... };
+        util::ignore {(
+            m_description.set(util::index_within<Cpts, CptsVector>::value),
+        0)...};
 
         std::cout << m_description << "\n";
     }
@@ -80,10 +79,13 @@ struct Entity
         get<Ref<Cpt> >(m_components) = cpt;
     }
 
+    template <class Cpt>
+    bool has_component()
+    { return m_description[util::index_of<Cpt, Components...>::value]; }
     
     template <class Cpt>
-    Ref<Cpt> get_component()
-    { return util::get<Ref<Cpt> >(m_components); }
+    Cpt get_component()
+    { return *util::get<Ref<Cpt> >(m_components); }
 };
 
 #ifdef _DEBUG
@@ -96,12 +98,12 @@ std::ostream& operator<<(std::ostream& out, Entity<Cs...>& e)
     
     out << "Entity<";
     util::ignore { (
-        e.template get_component<Cs>()
+        e.template has_component<Cs>()
         ? (out
            << (at_0 ? "" : ", ")
-           << *e.template get_component<Cs>()
+           << e.template get_component<Cs>()
         , at_0 = false)
-        : out,
+        : 0,
     0)... };
 
     return out << ">";
