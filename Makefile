@@ -1,14 +1,14 @@
 CC		= g++
 
 # OPTIMIZE     = -O3
-CFLAGS	= -std=c++11 $(OPTIMIZE) -w -D_DEBUG
+CFLAGS	= -g -std=c++11 $(OPTIMIZE) -w -D_DEBUG
 LFLAGS  = 
 
 BIN = test
 
 all: $(BIN)
 
-test: util.hh entity.hh component.hh component_space.hh test.cc 
+test: util.hh entity.hh component.hh entity_space.hh test.cc 
 	$(CC) $^ -o $@ $(CFLAGS) $(LFLAGS)
 
 test-%: %.hh

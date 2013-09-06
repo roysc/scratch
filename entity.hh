@@ -2,6 +2,7 @@
 #include <type_traits>
 #include <memory>
 #include <bitset>
+#include <cassert>
 
 #ifdef _DEBUG
 #include <iostream>
@@ -81,11 +82,18 @@ struct Entity
 
     template <class Cpt>
     bool has_component()
-    { return m_description[util::index_of<Cpt, Components...>::value]; }
+    {
+        return (bool)util::get<Ref<Cpt> >(m_components);
+        // return m_description[util::index_of<Cpt, Components...>::value];
+    }
     
     template <class Cpt>
     Cpt get_component()
-    { return *util::get<Ref<Cpt> >(m_components); }
+    {
+        assert((bool)util::get<Ref<Cpt> >(m_components) &&
+               "Component is not initialized!\n");
+        return *util::get<Ref<Cpt> >(m_components);
+    }
 };
 
 #ifdef _DEBUG

@@ -6,8 +6,8 @@
 #include "component.hh"
 #include "entity.hh"
 
-#ifndef _SCRATCH_COMPONENT_SPACE_
-#define _SCRATCH_COMPONENT_SPACE_
+#ifndef _SCRATCH_ENTITY_SPACE_
+#define _SCRATCH_ENTITY_SPACE_
 
 
 // Manages a single type of component
@@ -46,7 +46,7 @@ struct Subsystem
  * 
  */
 template <class... Components>
-struct ComponentSpace
+struct EntitySpace
 {
     // using Subsystems = util::TypeVector<Subsystem<Components>...>;
     using Index = util::TypeVector<Components...>;
@@ -60,7 +60,7 @@ struct ComponentSpace
 
     // struct UpdateSubsystem
     // {
-    //     ComponentSpace& self;
+    //     EntitySpace& self;
 
     //     template <class Subsystem>
     //     void operator()(Subsystem)
@@ -79,16 +79,21 @@ struct ComponentSpace
     template <class... InitCpts>
     EntityID create_entity()
     {
-        auto it = m_entities.begin();
-        for (; it != m_entities.end(); ++it) 
-            if (it->is_empty())
-                break;
-        
-        m_entities.insert(
-            it, EntityType(Ref<InitCpts> {new InitCpts()}...)
-        );
+        EntityType entity(Ref<InitCpts> {new InitCpts}...);
+        EntityID id = 0;
 
-        EntityID id = it - m_entities.begin();
+        auto it = m_entities.begin();
+        for (; it != m_entities.end() && !it->is_empty(); ++it, ++id) 
+            ;
+            // if (it->is_empty()) break;
+        
+
+        std::cout << "it = " << it - m_entities.begin() << "\n";
+
+        m_entities.insert(it, std::move(entity));
+        
+        std::cout << "creating Entity (id = "<<id<<"): ";
+        std::cout.flush() << *it << "\n";
         return id;
     }
 
@@ -118,7 +123,7 @@ struct ComponentSpace
 struct C0 : Component {};
 struct C1 : Component {};
 
-ComponentSpace<ComponentIndex<C0, C1> > csys;
+EntitySpace<ComponentIndex<C0, C1> > csys;
 // static_assert(, "");
 
 #endif

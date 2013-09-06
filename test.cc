@@ -6,7 +6,7 @@
 #include <array>
 #include <iostream>
 
-#include "component_space.hh"
+#include "entity_space.hh"
 
 struct Vec2
 {
@@ -16,7 +16,7 @@ struct Vec2
         struct { Number x, y; };                
     };                                          
                                                 
-    using InputType = decltype(v);              
+    // using InputType = decltype(v);              
 };
 
 struct Position
@@ -25,14 +25,14 @@ struct Position
     Vec2* const operator->() { return &m_; }
 };
 
+std::ostream& operator<<(std::ostream& out, Position v)
+{ return out << "Position(" << v->x << ", " << v->y << ")"; }
+
 struct Velocity
 {
     Vec2 m_;
     Vec2* const operator->() { return &m_; }
 };
-
-std::ostream& operator<<(std::ostream& out, Position v)
-{ return out << "Position(" << v->x << ", " << v->y << ")"; }
 
 std::ostream& operator<<(std::ostream& out, Velocity v)
 { return out << "Velocity(" << v->x << ", " << v->y << ")"; }
@@ -47,12 +47,6 @@ struct Motion
     }
 };
 
-// struct NullSource
-// {
-//     template <class InputType>
-//     InputType next() { return InputType(); }
-// };
-
     
 int main(int argc, char *argv[]) {
 
@@ -60,17 +54,9 @@ int main(int argc, char *argv[]) {
         // argc > 1 ?
         // std::stoi(argv[0]) :
         100;
-
-    using CIx = ComponentIndex<
-        Position,
-        Velocity
-        // Hint,
-        >;
     
-    using CSpace = ComponentSpace<Position, Velocity>;
-
-    // NullSource null_src;
-    CSpace space;
+    using Space = EntitySpace<Position, Velocity>;
+    Space space;
 
     std::vector<EntityID> entsp, entsv, entspv;
     // std::vector<Entity<ComponentIndex<Position> > > entsp;
@@ -81,9 +67,9 @@ int main(int argc, char *argv[]) {
         entspv.push_back(space.template create_entity<Position, Velocity>());
     }
     
-    for (auto& ent : entsp) std::cout << space[ent] << "\n";
-    for (auto& ent : entsv) std::cout << space[ent] << "\n";
-    for (auto& ent : entspv) std::cout << space[ent] << "\n";
+    for (auto ent : entsp) std::cout << space[ent] << "\n";
+    for (auto ent : entsv) std::cout << space[ent] << "\n";
+    for (auto ent : entspv) std::cout << space[ent] << "\n";
     
     
     // using Logic = LogicIndex<Motion>;

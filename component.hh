@@ -64,7 +64,7 @@ struct LogicSystem
     // using OperationQueue = typename std::list<Operation>;
 
     // OperationQueue op_queue;
-    // ComponentSpace space;
+    // EntitySpace space;
     
     void update() {}
 };
