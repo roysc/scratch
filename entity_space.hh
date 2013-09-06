@@ -35,17 +35,18 @@ struct EntitySpace
         EntityID id = 0;
 
         auto it = m_entities.begin();
-        for (; it != m_entities.end() && !it->is_empty(); ++it, ++id) 
-            ;
-            // if (it->is_empty()) break;
-        
+        while (it != m_entities.end() &&
+               !it->is_empty()) {
+            ++it;
+            ++id;
+        }
 
         std::cout << "it = " << it - m_entities.begin() << "\n";
 
         m_entities.insert(it, std::move(entity));
         
-        std::cout << "creating Entity (id = "<<id<<"): ";
-        std::cout.flush() << *it << "\n";
+        std::cout << "created Entity (id = "<<id<<"): ";
+        std::cout.flush() << m_entities[id] << "\n";
         return id;
     }
 

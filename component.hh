@@ -15,20 +15,14 @@
 
 using EntityID = ulong;
 
-template <class Component>
-struct Dependencies
-{
-    using Type = util::TypeVector<>;
-};
-
-template <class Component>
-using DependenciesOf = typename Dependencies<Component>::Type;
+DECLARE_SFINAE_TEST(Dependencies);
 
 /** Provides unique identifiers for Components;
  *  Determines Component layout in entities.
  */
 template <class... Cpts>
 using ComponentIndex = util::TypeVector<Cpts...>;
+
 
 // template <class... Cpts>
 // struct ComponentIndex
@@ -55,28 +49,7 @@ using ComponentIndex = util::TypeVector<Cpts...>;
 // };
 
 
-/** Represents logic involving several component subsystems 
- */
-template <class... Cpts>
-struct LogicSystem
-{
-    // struct Operation;
-    // using OperationQueue = typename std::list<Operation>;
-
-    // OperationQueue op_queue;
-    // EntitySpace space;
-    
-    void update() {}
-};
-
-
 #ifdef _BUILD_TEST
-
-// struct C0 : Component {};
-// struct C1 : Component {};
-
-// ComponentIndex<C0, C1> cix;
-// static_assert(, "");
 
 #endif
 

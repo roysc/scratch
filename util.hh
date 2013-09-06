@@ -134,11 +134,11 @@ namespace util
 
     // until C++14
     template <class T, class... Ts>
-    T& get(std::tuple<Ts...>& t)
+    constexpr T& get(std::tuple<Ts...>& t)
     { return std::get<index_of<T, Ts...>::value>(t); }
 
     template <class T, class... Ts>
-    T&& get(std::tuple<Ts...>&& t)
+    constexpr T&& get(std::tuple<Ts...>&& t)
     { return std::forward<T&&>(get<T>(t)); }
 
     
@@ -181,8 +181,25 @@ namespace util
         -> decltype(Functor {std::forward<Args>(args)...})
     { return Functor {std::forward<Args>(args)...}; }
 
-    
 }
+
+#define DECLARE_SFINAE_TEST(symbol)                                     \
+    namespace util                                                      \
+    {                                                                   \
+        template <typename T>                                           \
+            struct sfinae_has_##symbol                                  \
+        {                                                               \
+            using Yea = char;                                           \
+            using Nay = long;                                           \
+                                                                        \
+            template <class U> static Yea test(decltype(&U::symbol));   \
+            template <class> static Nay test(...);                      \
+                                                                        \
+            static constexpr bool value =                               \
+                sizeof(test<T>(nullptr)) == sizeof(Yea);                \
+        };                                                              \
+    }
+
 
 
 #ifdef _BUILD_TEST
@@ -190,18 +207,18 @@ namespace util
 // #include <iostream>
 // #include <typeinfo>
 
-int f(int) { return 1; }
-void g() {}
+int _f(int) { return 1; }
+void _g() {}
 
 using namespace util;
-    
+
 // static_assert(false, "working?");
 static_assert(any_satisfy<std::is_integral, int, float>::value, "");
 static_assert(!any_satisfy<std::is_integral, double, float>::value, "");
     
 static_assert(all_satisfy<std::is_integral, int, long, unsigned>::value, "");
 static_assert(!all_satisfy<std::is_integral, int, float>::value, "");
-static_assert(all_satisfy<std::is_function, decltype(f), decltype(g)>::value, "");
+static_assert(all_satisfy<std::is_function, decltype(_f), decltype(_g)>::value, "");
 
 static_assert(is_member<int, long, char, int>::value, "");
 static_assert(!is_member<int, double, long, float>::value, "");
@@ -214,6 +231,14 @@ static_assert(std::is_same<
               transform<add_pointer_t,
               std::tuple<int, float, char*> >::type,
               std::tuple<int*, float*, char**> >::value, "");
+
+struct _Y {};
+struct _X { char name() { return 'X'; } };
+
+DECLARE_SFINAE_TEST(name);
+
+static_assert(sfinae_has_name<_X>::value, "");
+static_assert(!sfinae_has_name<_Y>::value, "");
 
 #endif
 

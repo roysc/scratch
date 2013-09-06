@@ -23,6 +23,7 @@ struct Position
 {
     Vec2 m_;
     Vec2* const operator->() { return &m_; }
+    static std::string name() {}
 };
 
 std::ostream& operator<<(std::ostream& out, Position v)

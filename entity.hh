@@ -55,43 +55,24 @@ struct Entity
 
     bool is_empty() { return m_description.none(); }
     
-    struct VerifyComponent
-    {
-        Entity& self;
-        
-        template <class Cpt>
-        void operator()(Cpt)
-        {
-            auto cpt_ptr = self.template get_component<Cpt>();
-            assert(cpt_ptr != nullptr &&
-                   "Component dependency is not initialized!\n");
-        }
-    };
 
     template <class Cpt>
     void add_component(Ref<Cpt> cpt)
     {
-        using namespace util;
-        
-        expand_apply<Dependencies<Cpt> >(
-            make<VerifyComponent>(*this)
-        );
-            
-        get<Ref<Cpt> >(m_components) = cpt;
+        get<Ref<Cpt> >(m_components) = std::move(cpt);
     }
 
     template <class Cpt>
     bool has_component()
     {
-        return (bool)util::get<Ref<Cpt> >(m_components);
-        // return m_description[util::index_of<Cpt, Components...>::value];
+        // return bool(util::get<Ref<Cpt> >(m_components));
+        return m_description[util::index_of<Cpt, Components...>::value];
     }
     
     template <class Cpt>
     Cpt get_component()
     {
-        assert((bool)util::get<Ref<Cpt> >(m_components) &&
-               "Component is not initialized!\n");
+        assert(has_component<Cpt>() && "Component is not initialized!\n");
         return *util::get<Ref<Cpt> >(m_components);
     }
 };
