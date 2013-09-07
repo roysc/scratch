@@ -1,13 +1,16 @@
 #include <vector>
 #include <memory>
-#include <type_traits>
 
 #include "util.hh"
 #include "component.hh"
 #include "entity.hh"
 
-#ifndef _SCRATCH_ENTITY_SPACE_
-#define _SCRATCH_ENTITY_SPACE_
+#ifndef _SCRATCH_ENTITY_SPACE
+#define _SCRATCH_ENTITY_SPACE
+
+#ifdef _DEBUG
+using namespace util::debug;
+#endif
 
 /**
  * An environment which manages the specified components.
@@ -41,12 +44,14 @@ struct EntitySpace
             ++id;
         }
 
-        std::cout << "it = " << it - m_entities.begin() << "\n";
+        writeln("it - begin = ", it - m_entities.begin(), "\n");
 
-        m_entities.insert(it, std::move(entity));
+        // m_entities.insert(it, std::move(entity));
+        m_entities.insert(it, EntityType(Ref<InitCpts> {new InitCpts}...));
         
-        std::cout << "created Entity (id = "<<id<<"): ";
-        std::cout.flush() << m_entities[id] << "\n";
+        writeln("created Entity (id = ", id, "): ");
+        
+        cout.flush() << m_entities[id] << "\n";
         return id;
     }
 

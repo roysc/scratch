@@ -4,15 +4,15 @@
 #include <bitset>
 #include <cassert>
 
-#ifdef _DEBUG
-#include <iostream>
-#endif
-
 #include "util.hh"
 #include "component.hh"
 
-#ifndef _SCRATCH_ENTITY_
-#define _SCRATCH_ENTITY_
+#ifndef _SCRATCH_ENTITY
+#define _SCRATCH_ENTITY
+
+#ifdef _DEBUG
+using namespace util::debug;
+#endif
 
 template <class Cpt>
 using Ref = typename
@@ -20,6 +20,8 @@ using Ref = typename
     // std::add_pointer<Cpt>::type;
     // std::shared_ptr<Cpt>;
     std::unique_ptr<Cpt>;
+
+using EntityID = ulong;
 
 /**** Entity ****
  *  Anything that "exists" within the system 
@@ -43,7 +45,8 @@ struct Entity
         util::ignore {(
             util::get<Cpts>(m_components) = std::forward<Cpts>(args),
             std::cout << "setting Component: " << typeid(typename Cpts::element_type).name() << "\n",
-             0)...};
+            
+        0)...};
 
         using CptsVector = util::TypeVector<Cpts...>;
         util::ignore {(
@@ -59,7 +62,7 @@ struct Entity
     template <class Cpt>
     void add_component(Ref<Cpt> cpt)
     {
-        get<Ref<Cpt> >(m_components) = std::move(cpt);
+        util::get<Ref<Cpt> >(m_components) = std::move(cpt);
     }
 
     template <class Cpt>

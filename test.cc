@@ -16,30 +16,46 @@ struct Vec2
         struct { Number x, y; };                
     };                                          
                                                 
-    // using InputType = decltype(v);              
+    using InputType = decltype(v);
 };
 
-struct Position
+using String = std::string;
+
+
+struct Position : public BasicComponent
 {
     Vec2 m_;
     Vec2* const operator->() { return &m_; }
-    static std::string name() {}
+    static String name() { return "Position"; }
+
+    // std::ostream& operator<<(std::ostream& out) const
+    // {
+    //     return out << "Position(" << m_.x << ", " << m_.y << ")";
+    // }
+
+    std::string to_string() const
+    {
+        std::stringstream out;
+        out << "Position(" << m_.x << ", " << m_.y << ")";
+        return out.str();
+    }
+    
+    
 };
 
-std::ostream& operator<<(std::ostream& out, Position v)
-{ return out << "Position(" << v->x << ", " << v->y << ")"; }
 
-struct Velocity
+struct Velocity : public BasicComponent
 {
     Vec2 m_;
     Vec2* const operator->() { return &m_; }
+
 };
+
 
 std::ostream& operator<<(std::ostream& out, Velocity v)
 { return out << "Velocity(" << v->x << ", " << v->y << ")"; }
 
 struct Motion
-    : LogicSystem<Position, Velocity>
 {
     void update(Position& p, Velocity v)
     {
@@ -61,6 +77,10 @@ int main(int argc, char *argv[]) {
 
     std::vector<EntityID> entsp, entsv, entspv;
     // std::vector<Entity<ComponentIndex<Position> > > entsp;
+
+    // std::cout << "Names: "
+    //           << name<Position>() << ", "
+    //           << name<Velocity>() << "\n";
     
     for (int i = 0; i < 5; i++) {
         entsp.push_back(space.template create_entity<Position>());

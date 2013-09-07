@@ -5,17 +5,34 @@
 #include <unordered_map>
 #include <map>
 
-#include <iostream>
+#include <string>
 
+#include "common.hh"
 #include "util.hh"
 
+#ifndef _SCRATCH_COMPONENT
+#define _SCRATCH_COMPONENT
 
-#ifndef _SCRATCH_COMPONENT_
-#define _SCRATCH_COMPONENT_
+#ifdef _DEBUG
+using namespace util::debug;
+#endif
 
-using EntityID = ulong;
 
-DECLARE_SFINAE_TEST(Dependencies);
+struct BasicComponent
+{};
+
+// CREATE_MEMBER_TEST(name);
+
+// template <class C>
+// util::enable_if_t<!has__name<C>::value,
+//                   std::string> name()
+// { return typeid(C).name(); }
+
+// template <class C>
+// util::enable_if_t<has__name<C>::value,
+//                   std::string> name()
+// { return C::name(); }
+
 
 /** Provides unique identifiers for Components;
  *  Determines Component layout in entities.
