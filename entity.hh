@@ -11,7 +11,7 @@
 #define _SCRATCH_ENTITY
 
 #ifdef _DEBUG
-using namespace util::debug;
+using namespace util::print;
 #endif
 
 template <class Cpt>
@@ -44,7 +44,8 @@ struct Entity
         // using ignore = int[sizeof...(Cpts)];
         util::ignore {(
             util::get<Cpts>(m_components) = std::forward<Cpts>(args),
-            std::cout << "setting Component: " << typeid(typename Cpts::element_type).name() << "\n",
+            // writeln("setting Component"),
+            // std::cout << "setting Component: " << *args << "\n",
             
         0)...};
 
@@ -78,28 +79,29 @@ struct Entity
         assert(has_component<Cpt>() && "Component is not initialized!\n");
         return *util::get<Ref<Cpt> >(m_components);
     }
+
+    std::string to_string()
+    {
+        std::stringstream out;
+        bool at_0 = true;
+    
+        out << "Entity<";
+        util::ignore { (
+            has_component<Components>()
+            ? (out
+               << (at_0 ? "" : ", ")
+               << util::to_string(get_component<Components>())
+               , at_0 = false)
+            : 0,
+        0)... };
+        out << ">";
+        
+        return out.str();
+    }
+
 };
 
 #ifdef _DEBUG
-
-template <class... Cs>
-std::ostream& operator<<(std::ostream& out, Entity<Cs...>& e)
-{
-    using E = Entity<Cs...>;
-    bool at_0 = true;
-    
-    out << "Entity<";
-    util::ignore { (
-        e.template has_component<Cs>()
-        ? (out
-           << (at_0 ? "" : ", ")
-           << e.template get_component<Cs>()
-        , at_0 = false)
-        : 0,
-    0)... };
-
-    return out << ">";
-}
 
 #endif
 
