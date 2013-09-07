@@ -9,7 +9,7 @@
 #define _SCRATCH_ENTITY_SPACE
 
 #ifdef _DEBUG
-using namespace util::debug;
+using namespace util::io;
 #endif
 
 /**
@@ -44,14 +44,14 @@ struct EntitySpace
             ++id;
         }
 
-        writeln("it - begin = ", it - m_entities.begin(), "\n");
+        println("it - begin = ", it - m_entities.begin(), "\n");
 
         // m_entities.insert(it, std::move(entity));
         m_entities.insert(it, EntityType(Ref<InitCpts> {new InitCpts}...));
         
-        writeln("created Entity (id = ", id, "): ");
+        println("created Entity (id = ", id, "): ");
         
-        cout.flush() << m_entities[id] << "\n";
+        std::cout.flush() << util::to_string(m_entities[id]) << "\n";
         return id;
     }
 
@@ -74,10 +74,10 @@ struct EntitySpace
 
 #ifdef _BUILD_TEST
 
-struct C0 : Component {};
-struct C1 : Component {};
+struct C0 : BasicComponent {};
+struct C1 : BasicComponent {};
 
-EntitySpace<ComponentIndex<C0, C1> > csys;
+EntitySpace<C0, C1> space;
 // static_assert(, "");
 
 #endif

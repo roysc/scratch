@@ -88,9 +88,9 @@ int main(int argc, char *argv[]) {
         entspv.push_back(space.template create_entity<Position, Velocity>());
     }
     
-    for (auto ent : entsp) std::cout << space[ent] << "\n";
-    for (auto ent : entsv) std::cout << space[ent] << "\n";
-    for (auto ent : entspv) std::cout << space[ent] << "\n";
+    for (auto ent : entsp) std::cout << to_string(space[ent]) << "\n";
+    // for (auto ent : entsv) std::cout << space[ent] << "\n";
+    // for (auto ent : entspv) std::cout << space[ent] << "\n";
     
     
     // using Logic = LogicIndex<Motion>;

@@ -14,12 +14,17 @@
 #define _SCRATCH_COMPONENT
 
 #ifdef _DEBUG
-using namespace util::debug;
+using namespace util::io;
 #endif
 
 
 struct BasicComponent
-{};
+{
+    std::string to_string() const
+    {
+        return std::string("BasicComponent");
+    }
+};
 
 // CREATE_MEMBER_TEST(name);
 

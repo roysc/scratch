@@ -11,7 +11,8 @@
 
 #define CREATE_FUNCTION_TEST(symbol)                                    \
     template <class Ret, class... Args>                        \
-    struct detect_fn__##symbol {                                       \
+    struct detect_fn__##symbol                                         \
+    {                                                                  \
         template <class R = decltype(symbol(std::declval<Args>()...))> \
         static typename std::enable_if<                                 \
             std::is_same<typename std::decay<R>::type, Ret>::value, \
@@ -22,7 +23,8 @@
 
 #define CREATE_MEMBER_TEST(symbol)                                      \
     template <class T, class U>                                         \
-    struct detect_mem__##symbol {                                          \
+    struct detect_mem__##symbol                                         \
+    {                                                                   \
         template<class V = decltype(T::symbol)>                         \
         static typename std::enable_if<                                 \
             std::is_same<typename std::decay<V>::type, U>::value, \
@@ -33,7 +35,8 @@
 
 #define CREATE_MEMBER_FUNCTION_TEST(symbol)                             \
     template <class T, class Ret, class... Args>                        \
-    struct detect_mem_fn__##symbol {                                       \
+    struct detect_mem_fn__##symbol                                      \
+    {                                                                   \
         template <class R = decltype(                                   \
             std::declval<T>().symbol(std::declval<Args>()...))>      \
         static typename std::enable_if<                                 \
@@ -233,26 +236,26 @@ namespace util
     // string stuff
 
     
-    namespace print
+    namespace io
     {
         template <class... Args>
-        std::ostream& write_to(std::ostream& out, Args&&... args)
+        std::ostream& print_to(std::ostream& out, Args&&... args)
         {
             ignore {(out << std::forward<Args>(args), 0)...};
             return out;
         }
 
         template <class... Args>
-        std::ostream& write(Args&&... args)
-        { return write_to(std::cout, std::forward<Args>(args)...); }
+        std::ostream& print(Args&&... args)
+        { return print_to(std::cout, std::forward<Args>(args)...); }
 
         template <class... Args>
-        std::ostream& writeln(Args&&... args)
-        { return write(std::forward<Args>(args)..., "\n"); }
+        std::ostream& println(Args&&... args)
+        { return print(std::forward<Args>(args)..., "\n"); }
 
         
         template <class Tuple, size_t... Is>
-        void _print_tuple(std::ostream& out, Tuple const& t, indices<Is...>)
+        void _print_tuple(std::ostream& out, const Tuple& t, indices<Is...>)
         {
             out << "(";
             ignore {(
@@ -262,34 +265,35 @@ namespace util
         }
 
         template <class... Args>
-        std::ostream& operator<<(std::ostream& out, std::tuple<Args...>& t)
-        {
-            _print_tuple(out, t, indices_for<std::tuple<Args...> > {});
-        }
+        std::ostream& operator<<(std::ostream& out,
+                                 const std::tuple<Args...>& t)
+        { _print_tuple(out, t, indices_for<std::tuple<Args...> > {}); }
 
         
         CREATE_MEMBER_FUNCTION_TEST(to_string);
         template <class T>
         using has_to_string = detect_mem_fn__to_string<T, std::string>;
         
-        CREATE_FUNCTION_TEST(to_string);
-        template <class T>
-        using can_to_string = detect_fn__to_string<std::string, T>;
-        
         template <class T>
         enable_if_t<has_to_string<T>::value, std::string>
-        to_string(T& a)
+        to_string(T&& a)
         { return a.to_string(); }
 
         
-        template <class T>
-        util::enable_if_t<
-            can_to_string<T>::value,
-            std::ostream&>
-        operator<<(std::ostream& out, T& a)
-        {
-            return out << to_string(a);
-        }
+        // the below is perhaps a bit too clever...
+        
+        // CREATE_FUNCTION_TEST(to_string);
+        // template <class T>
+        // using can_to_string = detect_fn__to_string<std::string, T>;
+        
+        // template <class T>
+        // util::enable_if_t<
+        //     can_to_string<T>::value,
+        //     std::ostream&>
+        // operator<<(std::ostream& out, T& a)
+        // {
+        //     return out << to_string(a);
+        // }
 
         // template <class T>
         // std::ostream& operator<<(std::ostream& out, T& a)
@@ -299,7 +303,7 @@ namespace util
 
     }
 
-    using namespace print;
+    using namespace io;
 }
 
 #ifdef _BUILD_TEST
@@ -346,7 +350,7 @@ void test__to_string()
 {
     _S s;
     auto r = to_string(s);
-    writeln(s);
+    println(s);
 }
 
 

@@ -11,7 +11,7 @@
 #define _SCRATCH_ENTITY
 
 #ifdef _DEBUG
-using namespace util::print;
+using namespace util::io;
 #endif
 
 template <class Cpt>
@@ -44,7 +44,7 @@ struct Entity
         // using ignore = int[sizeof...(Cpts)];
         util::ignore {(
             util::get<Cpts>(m_components) = std::forward<Cpts>(args),
-            // writeln("setting Component"),
+            // println("setting Component"),
             // std::cout << "setting Component: " << *args << "\n",
             
         0)...};
@@ -86,14 +86,14 @@ struct Entity
         bool at_0 = true;
     
         out << "Entity<";
-        util::ignore { (
+        util::ignore {(
             has_component<Components>()
             ? (out
                << (at_0 ? "" : ", ")
                << util::to_string(get_component<Components>())
                , at_0 = false)
             : 0,
-        0)... };
+        0)...};
         out << ">";
         
         return out.str();
