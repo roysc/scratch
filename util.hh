@@ -1,5 +1,5 @@
-#include <type_traits>
 #include <tuple>
+#include <type_traits>
 #include <initializer_list>
 
 #include <string>
@@ -9,18 +9,38 @@
 #ifndef _SCRATCH_UTIL
 #define _SCRATCH_UTIL
 
+#define CREATE_FUNCTION_TEST(symbol)                                    \
+    template <class Ret, class... Args>                        \
+    struct detect_fn__##symbol {                                       \
+        template <class R = decltype(symbol(std::declval<Args>()...))> \
+        static typename std::enable_if<                                 \
+            std::is_same<typename std::decay<R>::type, Ret>::value, \
+            std::true_type>::type test(int); \
+        static std::false_type test(...);                               \
+        static const bool value = decltype(test(0))::value;             \
+    };
+
 #define CREATE_MEMBER_TEST(symbol)                                      \
-    template <class T>                                                  \
-    struct has__##symbol                                                \
-    {                                                                   \
-        using Yea = char;                                               \
-        using Nay = long;                                               \
-                                                                        \
-        template <class U> static Yea test(decltype(&U::symbol));       \
-        template <class> static Nay test(...);                          \
-                                                                        \
-        static constexpr bool value =                                   \
-            sizeof(test<T>(nullptr)) == sizeof(Yea);                    \
+    template <class T, class U>                                         \
+    struct detect_mem__##symbol {                                          \
+        template<class V = decltype(T::symbol)>                         \
+        static typename std::enable_if<                                 \
+            std::is_same<typename std::decay<V>::type, U>::value, \
+            std::true_type>::type test(int); \
+        static std::false_type test(...);                               \
+        static const bool value = decltype(test(0))::value;             \
+    };
+
+#define CREATE_MEMBER_FUNCTION_TEST(symbol)                             \
+    template <class T, class Ret, class... Args>                        \
+    struct detect_mem_fn__##symbol {                                       \
+        template <class R = decltype(                                   \
+            std::declval<T>().symbol(std::declval<Args>()...))>      \
+        static typename std::enable_if<                                 \
+            std::is_same<typename std::decay<R>::type, Ret>::value, \
+            std::true_type>::type test(int); \
+        static std::false_type test(...);                               \
+        static const bool value = decltype(test(0))::value;             \
     };
 
 
@@ -93,15 +113,15 @@ namespace util
 
     
         /** Transform a variadic template */
-        template <template <class> class, class> struct transform;
+        template <template <class> class, class> struct Transform;
 
         template <template <class> class How,
                   template <class...> class Variadic, class... Ts>
-        struct transform<How, Variadic<Ts...>>
+        struct Transform<How, Variadic<Ts...>>
         { using type = Variadic<How<Ts>...>; };
     
         template <template <class> class How, class Variadic>
-        using transform_t = typename transform<How, Variadic>::type;
+        using TransformT = typename Transform<How, Variadic>::type;
     }
 
     using namespace meta;
@@ -211,34 +231,10 @@ namespace util
     { return Functor {std::forward<Args>(args)...}; }
 
     // string stuff
-    using std::to_string;
-
-    CREATE_MEMBER_TEST(to_string);
-    
-    template <class T>
-    enable_if_t<has__to_string<T>::value,
-                std::string>
-    to_string(T& a)
-    {
-        return a.to_string();
-    }
-
-
-    template <class T>
-    util::enable_if_t<
-        util::has__to_string<T>::value,
-        std::ostream&>
-    operator<<(std::ostream& out, T& a)
-    {
-        return out << a.to_string();
-    }
 
     
-    namespace debug
+    namespace print
     {
-        using std::cout;
-        using std::cerr;
-        
         template <class... Args>
         std::ostream& write_to(std::ostream& out, Args&&... args)
         {
@@ -248,7 +244,7 @@ namespace util
 
         template <class... Args>
         std::ostream& write(Args&&... args)
-        { return write_to(cout, std::forward<Args>(args)...); }
+        { return write_to(std::cout, std::forward<Args>(args)...); }
 
         template <class... Args>
         std::ostream& writeln(Args&&... args)
@@ -270,12 +266,41 @@ namespace util
         {
             _print_tuple(out, t, indices_for<std::tuple<Args...> > {});
         }
+
+        
+        CREATE_MEMBER_FUNCTION_TEST(to_string);
+        template <class T>
+        using has_to_string = detect_mem_fn__to_string<T, std::string>;
+        
+        CREATE_FUNCTION_TEST(to_string);
+        template <class T>
+        using can_to_string = detect_fn__to_string<std::string, T>;
+        
+        template <class T>
+        enable_if_t<has_to_string<T>::value, std::string>
+        to_string(T& a)
+        { return a.to_string(); }
+
+        
+        template <class T>
+        util::enable_if_t<
+            can_to_string<T>::value,
+            std::ostream&>
+        operator<<(std::ostream& out, T& a)
+        {
+            return out << to_string(a);
+        }
+
+        // template <class T>
+        // std::ostream& operator<<(std::ostream& out, T& a)
+        // {
+        //     return out << to_string(a);
+        // }
+
     }
 
-    using namespace debug;
+    using namespace print;
 }
-
-
 
 #ifdef _BUILD_TEST
 
@@ -303,17 +328,27 @@ static_assert(std::is_same<
               std::tuple<int, long> >::value, "");
 
 static_assert(std::is_same<
-              transform<add_pointer_t,
-              std::tuple<int, float, char*> >::type,
+              TransformT<add_pointer_t, std::tuple<int, float, char*> >,
               std::tuple<int*, float*, char**> >::value, "");
 
-struct _Y {};
 struct _X { char name() { return 'X'; } };
+struct _Y { char name = 'Y'; };
+struct _Z { };
 
-CREATE_MEMBER_TEST(name);
+CREATE_MEMBER_FUNCTION_TEST(name);
 
-static_assert(has__name<_X>::value, "");
-static_assert(!has__name<_Y>::value, "");
+static_assert(detect_mem_fn__name<_X, char>::value, "");
+static_assert(!detect_mem_fn__name<_Y, char>::value, "");
+
+struct _S { std::string to_string() { return "ess"; }};
+
+void test__to_string()
+{
+    _S s;
+    auto r = to_string(s);
+    writeln(s);
+}
+
 
 #endif
 
