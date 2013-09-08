@@ -11,7 +11,7 @@
 
 #define CREATE_FUNCTION_TEST(symbol)                                    \
     template <class Ret, class... Args>                        \
-    struct detect_fn__##symbol                                         \
+    struct detect_fn_##symbol                                         \
     {                                                                  \
         template <class R = decltype(symbol(std::declval<Args>()...))> \
         static typename std::enable_if<                                 \
@@ -23,9 +23,10 @@
 
 #define CREATE_MEMBER_TEST(symbol)                                      \
     template <class T, class U>                                         \
-    struct detect_mem__##symbol                                         \
+    struct detect_mem_##symbol                                         \
     {                                                                   \
-        template<class V = decltype(T::symbol)>                         \
+        using T_ = typename std::decay<T>::type;                        \
+        template<class V = decltype(T_::symbol)>                         \
         static typename std::enable_if<                                 \
             std::is_same<typename std::decay<V>::type, U>::value, \
             std::true_type>::type test(int); \
@@ -35,8 +36,10 @@
 
 #define CREATE_MEMBER_FUNCTION_TEST(symbol)                             \
     template <class T, class Ret, class... Args>                        \
-    struct detect_mem_fn__##symbol                                      \
+    struct detect_mem_fn_##symbol                                      \
+        : std::enable_if<std::is_class<T>::value>                       \
     {                                                                   \
+        using T_ = typename std::decay<T>::type;                        \
         template <class R = decltype(                                   \
             std::declval<T>().symbol(std::declval<Args>()...))>      \
         static typename std::enable_if<                                 \
@@ -93,14 +96,14 @@ namespace util
     namespace meta
     {
         /** Filter a parameter pack */    
-        template <template <class> class, class> struct filter;
+        template <template <class> class, class> struct FilterImpl;
 
         template <template <class> class Pred, template <class...> class Variadic>
-        struct filter<Pred, Variadic<> > { using type = Variadic<>; };
+        struct FilterImpl<Pred, Variadic<> > { using type = Variadic<>; };
         template <template <class> class Pred,
                   template <class...> class Variadic,
                   class T, class... Ts>
-        struct filter<Pred, Variadic<T, Ts...> >
+        struct FilterImpl<Pred, Variadic<T, Ts...> >
         {
             template <class, class> struct Cons;
             template <class Head, class... Tail>
@@ -114,17 +117,20 @@ namespace util
                 >::type;
         };
 
+        template <template <class> class Pred, class Variadic>
+        using Filter = typename FilterImpl<Pred, Variadic>::type;
+
     
         /** Transform a variadic template */
-        template <template <class> class, class> struct Transform;
+        template <template <class> class, class> struct TransformImpl;
 
         template <template <class> class How,
                   template <class...> class Variadic, class... Ts>
-        struct Transform<How, Variadic<Ts...>>
+        struct TransformImpl<How, Variadic<Ts...>>
         { using type = Variadic<How<Ts>...>; };
     
         template <template <class> class How, class Variadic>
-        using TransformT = typename Transform<How, Variadic>::type;
+        using Transform = typename TransformImpl<How, Variadic>::type;
     }
 
     using namespace meta;
@@ -153,7 +159,7 @@ namespace util
     // { };
 
     template <class... Ts>
-    using TypeVector = typename std::tuple<Ts...>;
+    using TypeVector = std::tuple<Ts...>;
 
     template <class Variadic>
     using variadic_size = std::tuple_size<Variadic>;
@@ -219,19 +225,10 @@ namespace util
     { expand_apply(f, Variadic()); }
 
     
-    // By C++14, such functors can be replaced with e.g.:
-    // expand_apply<EntityIndex>(
-    //     [&] <class Cpt> (Cpt _) {
-    //         auto sub = self.m_subsystems.template get<Cpt>();
-    //         entity.add_component(sub.create(src));
-    // ...
-    //     [&] <class Subsystem> (Subsystem _) {
-    //         m_subsystems.template get<Subsystem>().update();
-    //     });
-    template <class Functor, class... Args>
+    template <class T, class... Args>
     auto make(Args&&... args)
-        -> decltype(Functor {std::forward<Args>(args)...})
-    { return Functor {std::forward<Args>(args)...}; }
+        -> decltype(T {std::forward<Args>(args)...})
+    { return T {std::forward<Args>(args)...}; }
 
     // string stuff
 
@@ -272,19 +269,31 @@ namespace util
         
         CREATE_MEMBER_FUNCTION_TEST(to_string);
         template <class T>
-        using has_to_string = detect_mem_fn__to_string<T, std::string>;
+        using has_to_string = detect_mem_fn_to_string<T, std::string>;
+        
+        // template <class T>
+        // struct has_to_string
+        //     : detect_mem_fn_to_string<T, std::string>
+        // {};
         
         template <class T>
-        enable_if_t<has_to_string<T>::value, std::string>
+        enable_if_t<has_to_string<T>::value,
+                    std::string>
         to_string(T&& a)
         { return a.to_string(); }
 
+        // template <class T>
+        // enable_if_t<!has_to_string<T>::value, std::string>
+        // to_string(T&& a)
+        // { return std::to_string(std::forward<T>(a)); }
+
+        
         
         // the below is perhaps a bit too clever...
         
         // CREATE_FUNCTION_TEST(to_string);
         // template <class T>
-        // using can_to_string = detect_fn__to_string<std::string, T>;
+        // using can_to_string = detect_fn_to_string<std::string, T>;
         
         // template <class T>
         // util::enable_if_t<
@@ -341,15 +350,18 @@ struct _Z { };
 
 CREATE_MEMBER_FUNCTION_TEST(name);
 
-static_assert(detect_mem_fn__name<_X, char>::value, "");
-static_assert(!detect_mem_fn__name<_Y, char>::value, "");
+static_assert(detect_mem_fn_name<_X, char>::value, "");
+static_assert(!detect_mem_fn_name<_Y, char>::value, "");
 
-struct _S { std::string to_string() { return "ess"; }};
+struct _S { std::string to_string() { return std::string("ess"); }};
 
-void test__to_string()
+// void test_to_string()
+int main()
 {
+    // using util::io::to_string;
     _S s;
     auto r = to_string(s);
+    // std::cout << r;
     println(s);
 }
 
