@@ -69,8 +69,10 @@ struct Entity
     template <class Cpt>
     bool has_component()
     {
-        // return bool(util::get<Ref<Cpt> >(m_components));
-        return m_description[util::index_of<Cpt, Components...>::value];
+        return bool(util::get<Ref<Cpt> >(m_components));
+
+        // causes segfault!
+        // return m_description[util::index_of<Cpt, Components...>::value];
     }
     
     template <class Cpt>
@@ -84,7 +86,7 @@ struct Entity
     {
         std::stringstream out;
         bool at_0 = true;
-    
+        
         out << "Entity<";
         util::ignore {(
             has_component<Components>()
