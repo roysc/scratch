@@ -12,10 +12,11 @@ struct Vec2
 {
     using Number = uint;
     union {                                     
-        std::array<Number, 2> v;                
+        std::array<Number, 2> v;
         struct { Number x, y; };                
     };                                          
                                                 
+    Vec2() : v {{0, 0}} {}                
     using InputType = decltype(v);
 };
 
@@ -26,21 +27,14 @@ struct Position : public BasicComponent
 {
     Vec2 m_;
     Vec2* const operator->() { return &m_; }
+
     static String name() { return "Position"; }
-
-    // std::ostream& operator<<(std::ostream& out) const
-    // {
-    //     return out << "Position(" << m_.x << ", " << m_.y << ")";
-    // }
-
     std::string to_string() const
     {
         std::stringstream out;
         out << "Position(" << m_.x << ", " << m_.y << ")";
         return out.str();
     }
-    
-    
 };
 
 
@@ -49,6 +43,12 @@ struct Velocity : public BasicComponent
     Vec2 m_;
     Vec2* const operator->() { return &m_; }
 
+    std::string to_string() const
+    {
+        std::stringstream out;
+        out << "Velocity(" << m_.x << ", " << m_.y << ")";
+        return out.str();
+    }
 };
 
 
@@ -88,9 +88,9 @@ int main(int argc, char *argv[]) {
         entspv.push_back(space.template create_entity<Position, Velocity>());
     }
     
-    for (auto ent : entsp) std::cout << to_string(space[ent]) << "\n";
-    // for (auto ent : entsv) std::cout << space[ent] << "\n";
-    // for (auto ent : entspv) std::cout << space[ent] << "\n";
+    for (auto ent : entsp) println(to_string(space[ent]));
+    for (auto ent : entsv) println(to_string(space[ent]));
+    for (auto ent : entspv) println(to_string(space[ent]));
     
     
     // using Logic = LogicIndex<Motion>;
