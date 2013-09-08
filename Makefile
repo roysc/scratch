@@ -1,18 +1,23 @@
 CC		= g++
 
-# OPTIMIZE     = -O3
-CFLAGS	= -g -std=c++11 $(OPTIMIZE) -w -D_DEBUG
+# OPT     = -O3
+CFLAGS	= -g -std=c++11 $(OPT) -w -D_DEBUG
 LFLAGS  = 
+OBJ_FILES = common.o util.o entity.o component.o entity_space.o
 
 BIN = test
 
 all: $(BIN)
 
-test: common.hh util.hh entity.hh component.hh entity_space.hh test.cc 
+%.o: %.cc %.hh
+	$(CC) -c $< -o $@
+
+# test: $(OBJ_FILES) test.cc
+test: $(OBJ_FILES:.o=.hh) test.cc
 	$(CC) $^ -o $@ $(CFLAGS) $(LFLAGS)
 
 test-%: %.hh
 	$(CC) $^ -o $@ $(CFLAGS) $(LFLAGS) -D_BUILD_TEST
 
 clean:
-	rm $(BIN) *.o *.gch
+	rm $(BIN) $(OBJ_FILES) *.gch
