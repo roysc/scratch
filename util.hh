@@ -216,12 +216,12 @@ namespace util
     /** Static-for functions */
     // using boost::mpl::for_each;
 
-    // using ignore = int[];
-    struct ignore { ignore(std::initializer_list<int>) {} };
+    // using swallow = int[];
+    struct swallow { swallow(std::initializer_list<int>) {} };
 
     template <class Variadic, class Functor, size_t... Is>
     void _expand_apply(Functor&& f, Variadic&& tuple, indices<Is...>)
-    { ignore { (f(std::get<Is>(tuple)), 0)... }; }
+    { swallow { (f(std::get<Is>(tuple)), 0)... }; }
 
     template <class Variadic, class Functor>
     void expand_apply(Functor&& f, Variadic&& tuple)
@@ -245,7 +245,7 @@ namespace util
         template <class... Args>
         std::ostream& print_to(std::ostream& out, Args&&... args)
         {
-            ignore {(out << std::forward<Args>(args), 0)...};
+            swallow {(out << std::forward<Args>(args), 0)...};
             return out;
         }
 
@@ -262,7 +262,7 @@ namespace util
         void _print_tuple(std::ostream& out, const Tuple& t, indices<Is...>)
         {
             out << "(";
-            ignore {(
+            swallow {(
                 out << (Is == 0 ? "" : ", ") << std::get<Is>(t),
             0)...};
             out << ")";

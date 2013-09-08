@@ -41,8 +41,8 @@ struct Entity
     Entity(Cpts&&... args)
         // : m_components { std::forward<Cpts>(args)... }
     {
-        // using ignore = int[sizeof...(Cpts)];
-        util::ignore {(
+        // using swallow = int[sizeof...(Cpts)];
+        util::swallow {(
             util::get<Cpts>(m_components) = std::forward<Cpts>(args),
             // println("setting Component"),
             // std::cout << "setting Component: " << *args << "\n",
@@ -50,11 +50,11 @@ struct Entity
         0)...};
 
         using CptsVector = util::TypeVector<Cpts...>;
-        util::ignore {(
+        util::swallow {(
             m_description.set(util::index_within<Cpts, CptsVector>::value),
         0)...};
 
-        std::cout << m_description << "\n";
+        // println(m_description);
     }
 
     bool is_empty() { return m_description.none(); }
@@ -88,7 +88,7 @@ struct Entity
         bool at_0 = true;
         
         out << "Entity<";
-        util::ignore {(
+        util::swallow {(
             has_component<Components>()
             ? (out
                << (at_0 ? "" : ", ")
