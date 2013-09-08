@@ -39,17 +39,16 @@ struct EntitySpace
 
         auto it = m_entities.begin();
         while (it != m_entities.end() &&
-               !it->is_empty()) {
-            ++it;
-            ++id;
-        }
+               !it->is_empty())
+            ++it, ++id;
 
-        println("it - begin = ", it - m_entities.begin(), "\n");
+        // println("it - begin = ", it - m_entities.begin(), "\n");
+        // println("creating Entity (id = ", id, "): ");
 
-        // m_entities.insert(it, std::move(entity));
-        m_entities.insert(it, EntityType(Ref<InitCpts> {new InitCpts}...));
+        m_entities.insert(it, std::move(entity));
+        // m_entities.insert(it, EntityType(Ref<InitCpts> {new InitCpts}...));
         
-        println("created Entity (id = ", id, "): ");
+        // println("# of entities = ", m_entities.size());
         
         std::cout.flush() << util::to_string(m_entities[id]) << "\n";
         return id;

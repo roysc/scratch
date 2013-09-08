@@ -112,8 +112,8 @@ namespace util
         
             using type = typename std::conditional<
                 Pred<T>::value,
-                typename Cons<T, typename filter<Pred, Variadic<Ts...> >::type>::type,
-                typename filter<Pred, Variadic<Ts...> >::type
+                typename Cons<T, typename FilterImpl<Pred, Variadic<Ts...> >::type>::type,
+                typename FilterImpl<Pred, Variadic<Ts...> >::type
                 >::type;
         };
 
@@ -153,14 +153,21 @@ namespace util
     template <class T, template <class...> class Variadic, class... Ts>
     struct index_within<T, Variadic<Ts...> > : index_of<T, Ts...> {};
     
-    /** A tuple with indexing by type */
-    // template <class... Ts>
-    // struct TypeVector : public std::tuple<Ts...>
-    // { };
-
+    /** Type container */
     template <class... Ts>
     using TypeVector = std::tuple<Ts...>;
 
+    template <class... Ts>
+    struct TypeSet : public TypeVector<Ts...>
+    {
+        template <class> struct contains;
+        template <class U>
+        struct contains : is_member<U, Ts...> {};
+        template <class... Us>
+        struct contains<TypeSet<Us...> > : all_satisfy<contains, Us...>
+        {};
+    };
+    
     template <class Variadic>
     using variadic_size = std::tuple_size<Variadic>;
 
