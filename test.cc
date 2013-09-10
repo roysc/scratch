@@ -6,9 +6,12 @@
 #include <array>
 #include <iostream>
 
+#include "util.hh"
 #include "entity_space.hh"
 
-struct Vec2
+using namespace util::io;
+
+struct Vec2 : public BasicComponent
 {
     using Number = uint;
     union {                                     
@@ -20,67 +23,47 @@ struct Vec2
     using InputType = decltype(v);
 };
 
-using String = std::string;
 
-
-struct Position : public BasicComponent
+struct Position : public Vec2, public BasicComponent
 {
-    Vec2 m_;
-    Vec2* const operator->() { return &m_; }
-
-    static String name() { return "Position"; }
+    static std::string name() { return "Position"; }
     std::string to_string() const
     {
         std::stringstream out;
-        out << "Position(" << m_.x << ", " << m_.y << ")";
+        print_to(out, name(), "(", x, ", ", y, ")");
         return out.str();
     }
 };
 
 
-struct Velocity : public BasicComponent
+struct Velocity : public Vec2, public BasicComponent
 {
-    Vec2 m_;
-    Vec2* const operator->() { return &m_; }
-
+    static std::string name() { return "Velocity"; }
     std::string to_string() const
     {
         std::stringstream out;
-        out << "Velocity(" << m_.x << ", " << m_.y << ")";
+        print_to(out, "Velocity(", x, ", ", y, ")");
         return out.str();
     }
 };
 
-
-std::ostream& operator<<(std::ostream& out, Velocity v)
-{ return out << "Velocity(" << v->x << ", " << v->y << ")"; }
 
 struct Motion
 {
     void update(Position& p, Velocity v)
     {
-        p->x += v->x;
-        p->y += v->y;
+        p.x += v.x;
+        p.y += v.y;
     }
 };
 
     
 int main(int argc, char *argv[]) {
-
-    int n_ent =
-        // argc > 1 ?
-        // std::stoi(argv[0]) :
-        100;
     
     using Space = EntitySpace<Position, Velocity>;
     Space space;
 
     std::vector<EntityID> entsp, entsv, entspv;
-    // std::vector<Entity<ComponentIndex<Position> > > entsp;
-
-    // std::cout << "Names: "
-    //           << name<Position>() << ", "
-    //           << name<Velocity>() << "\n";
     
     for (int i = 0; i < 5; i++) {
         entsp.push_back(space.template create_entity<Position>());
