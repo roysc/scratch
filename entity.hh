@@ -39,19 +39,18 @@ struct Entity
     Description m_description;
 
     template <class... Cpts>
-    Entity(Cpts&&... args)
+    Entity(Ref<Cpts>&&... args)
         // : m_components { std::forward<Cpts>(args)... }
     {
-        // using swallow = int[sizeof...(Cpts)];
         util::swallow {(
-            util::get<Cpts>(m_components) = std::forward<Cpts>(args),
-            // println("setting Component"),
-            // std::cout << "setting Component: " << *args << "\n",
+            util::get<Ref<Cpts> >(m_components) =
+                std::forward<Ref<Cpts> >(args),
+            // println("setting Component ", *args),
             
         0)...};
 
         util::swallow {(
-            m_description.set(util::index_of<Cpts, Cpts...>::value),
+            m_description.set(util::index_of<Cpts, Components...>::value),
         0)...};
 
         // println(m_description);
@@ -70,13 +69,10 @@ struct Entity
     template <class Cpt>
     bool has_component()
     {
-        // causes segfault! why?
-        // auto ix = util::index_of<Cpt, Components...>::value;
-        // println("checking ", name<Cpt>(),
-        //         ": bit ", ix, " in ", m_description);
-        // return m_description.test(ix);
+        const auto ix = util::index_of<Cpt, Components...>::value;
+        return m_description.test(ix);
         
-        return bool(util::get<Ref<Cpt> >(m_components));
+        // return bool(util::get<Ref<Cpt> >(m_components));
     }
     
     template <class Cpt>
@@ -92,9 +88,10 @@ struct Entity
                 m_description.set(
                     util::index_of<Components, Components...>::value,
                     has_component<Components>()),
-                
             0)...};            
-        return (flags | m_description) == m_description;
+        // println()
+        
+        return (flags & m_description) == m_description;
     }
     
     std::string to_string()
