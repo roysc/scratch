@@ -50,7 +50,7 @@ struct EntitySpace
         
         // println("# of entities = ", m_entities.size());
         
-        std::cout.flush() << util::to_string(m_entities[id]) << "\n";
+        std::cout.flush() << m_entities[id] << "\n";
         return id;
     }
 

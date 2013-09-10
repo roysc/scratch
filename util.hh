@@ -238,11 +238,12 @@ namespace util
         
         CREATE_MEMBER_FUNCTION_TEST(to_string);
         template <class T>
-        using has_to_string = detect_mem_fn_to_string<T, std::string>;
+        using has_to_string = detect_mem_fn_to_string<
+            typename std::decay<T>::type, std::string>;
         
         template <class T,
                   class = enable_if_t<has_to_string<T>::value> >
-        std::string to_string(T& a)
+        std::string to_string(T&& a)
         { return a.to_string(); }
         
         
@@ -252,7 +253,7 @@ namespace util
         
         template <class T,
                   class = enable_if_t<has_to_string<T>::value> >
-        std::ostream& operator<<(std::ostream& out, T& a)
+        std::ostream& operator<<(std::ostream& out, T&& a)
         { return out << to_string(a); }
 
     }
@@ -289,31 +290,14 @@ static_assert(std::is_same<
               Transform<add_pointer_t, std::tuple<int, float, char*> >,
               std::tuple<int*, float*, char**> >::value, "");
 
-struct FooX { char name(); int add(int);};
-struct FooY { static char name; };
-struct FooZ { };
 
-// CREATE_STATIC_MEMBER_TEST(name);
-
-// static_assert(detect_mem_name<FooY, char>::value, "");
-// static_assert(!detect_mem_name<FooX, char>::value, "");
-// static_assert(!detect_mem_name<FooZ, char>::value, "");
-
-
-CREATE_MEMBER_FUNCTION_TEST(name);
-
-static_assert(detect_mem_fn_name<FooX, char>::value, "");
-static_assert(!detect_mem_fn_name<FooY, char>::value, "");
-static_assert(!detect_mem_fn_name<FooZ, char>::value, "");
-
-
-struct _S { std::string to_string() { return std::string("ess"); }};
+struct S { std::string to_string() { return std::string("ess"); }};
 
 // void test_to_string()
 int main()
 {
     // using util::io::to_string;
-    _S s;
+    S s;
     std::cout << to_string(s) << '\n';
     std::cout << s << '\n';
     println(s);

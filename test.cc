@@ -88,9 +88,9 @@ int main(int argc, char *argv[]) {
         entspv.push_back(space.template create_entity<Position, Velocity>());
     }
     
-    for (auto ent : entsp) println(to_string(space[ent]));
-    for (auto ent : entsv) println(to_string(space[ent]));
-    for (auto ent : entspv) println(to_string(space[ent]));
+    for (auto ent : entsp) println(space[ent]);
+    for (auto ent : entsv) println(space[ent]);
+    for (auto ent : entspv) println(space[ent]);
     
     
     // using Logic = LogicIndex<Motion>;
