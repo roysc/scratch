@@ -34,7 +34,8 @@ struct Entity
     using Contents = util::TypeVector<Ref<Components>...>;
     Contents m_components;
 
-    using Description = std::bitset<sizeof...(Components)>;
+    static const size_t capacity = sizeof...(Components);
+    using Description = std::bitset<capacity>;
     Description m_description;
 
     template <class... Cpts>
@@ -49,9 +50,8 @@ struct Entity
             
         0)...};
 
-        using CptsVector = util::TypeVector<Cpts...>;
         util::swallow {(
-            m_description.set(util::index_within<Cpts, CptsVector>::value),
+            m_description.set(util::index_of<Cpts, Cpts...>::value),
         0)...};
 
         // println(m_description);
@@ -61,38 +61,54 @@ struct Entity
     
 
     template <class Cpt>
-    void add_component(Ref<Cpt> cpt)
+    void add_component(Ref<Cpt>&& cpt)
     {
         util::get<Ref<Cpt> >(m_components) = std::move(cpt);
+        m_description.set(util::index_of<Cpt, Components...>::value);
     }
 
     template <class Cpt>
     bool has_component()
     {
+        // causes segfault! why?
+        // auto ix = util::index_of<Cpt, Components...>::value;
+        // println("checking ", name<Cpt>(),
+        //         ": bit ", ix, " in ", m_description);
+        // return m_description.test(ix);
+        
         return bool(util::get<Ref<Cpt> >(m_components));
-
-        // causes segfault!
-        // return m_description[util::index_of<Cpt, Components...>::value];
     }
     
     template <class Cpt>
     Cpt get_component()
     {
-        assert(has_component<Cpt>() && "Component is not initialized!\n");
+        // assert(has_component<Cpt>() && "Component is not initialized!\n");
         return *util::get<Ref<Cpt> >(m_components);
     }
 
+    bool supports(std::bitset<capacity> flags)
+    {
+        util::swallow {(
+                m_description.set(
+                    util::index_of<Components, Components...>::value,
+                    has_component<Components>()),
+                
+            0)...};            
+        return (flags | m_description) == m_description;
+    }
+    
     std::string to_string()
     {
+        using util::io::print_to;
+        
         std::stringstream out;
         bool at_0 = true;
         
         out << "Entity<";
         util::swallow {(
             has_component<Components>()
-            ? (out
-               << (at_0 ? "" : ", ")
-               << util::to_string(get_component<Components>())
+            ? (print_to(out, at_0 ? "" : ", ",
+                        get_component<Components>())
                , at_0 = false)
             : 0,
         0)...};
