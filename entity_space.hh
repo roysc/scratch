@@ -2,14 +2,13 @@
 #include <memory>
 
 #include "util.hh"
-#include "component.hh"
 #include "entity.hh"
 
 #ifndef _SCRATCH_ENTITY_SPACE
 #define _SCRATCH_ENTITY_SPACE
 
 #ifdef _DEBUG
-using namespace util::io;
+using namespace util::io; // when not debugging, shouldn't have print stmts
 #endif
 
 /**
@@ -26,11 +25,6 @@ struct EntitySpace
     // members
     Entities m_entities;
     
-    void update()
-    {
-        
-    }
-    
     template <class... InitCpts>
     EntityID create_entity()
     {
@@ -46,38 +40,24 @@ struct EntitySpace
         // println("creating Entity (id = ", id, "): ");
 
         m_entities.insert(it, std::move(entity));
-        // m_entities.insert(it, EntityType(Ref<InitCpts> {new InitCpts}...));
         
         // println("# of entities = ", m_entities.size());
+        // println(m_entities[id]);
         
-        std::cout.flush() << m_entities[id] << "\n";
         return id;
     }
 
     EntityType& operator[](EntityID id)
-    {
-        return m_entities[id];
-    }
-
-    
-    /**** Operation ****
-     * performed by component
-     * on entities implementing component */
-    struct Operation
-    {
-        virtual void execute();
-    };
+    { return m_entities[id]; }
 
 };
 
+template <class EntitySpace, class... Components>
+auto create_entity =
+    std::mem_fn(&EntitySpace::template create_entity<Components...>);
+
 
 #ifdef _BUILD_TEST
-
-struct C0 : BasicComponent {};
-struct C1 : BasicComponent {};
-
-EntitySpace<C0, C1> space;
-// static_assert(, "");
 
 #endif
 
