@@ -3,7 +3,7 @@ CC		= g++
 # OPT     = -O3
 CFLAGS	= -g -std=c++11 $(OPT) -w -D_DEBUG
 LFLAGS  = 
-OBJ_FILES = common.o util.o entity.o component.o entity_space.o
+OBJ_FILES = common.o sfinae.o util.o entity.o component.o entity_space.o
 
 BIN = test
 
