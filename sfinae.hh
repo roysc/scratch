@@ -48,4 +48,27 @@
     static const bool value = decltype(test(0))::value;                 \
 };
 
+
+#ifdef _BUILD_TEST
+
+struct FooX { char name(); int add(int);};
+struct FooY { static char name; };
+struct FooZ { };
+
+CREATE_MEMBER_TEST(name);
+
+static_assert(detect_mem_name<FooY, char>::value, "");
+static_assert(!detect_mem_name<FooX, char>::value, "");
+static_assert(!detect_mem_name<FooZ, char>::value, "");
+
+
+CREATE_MEMBER_FUNCTION_TEST(name);
+
+static_assert(detect_mem_fn_name<FooX, char>::value, "");
+static_assert(!detect_mem_fn_name<FooY, char>::value, "");
+static_assert(!detect_mem_fn_name<FooZ, char>::value, "");
+
 #endif
+
+#endif
+
