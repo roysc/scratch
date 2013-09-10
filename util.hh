@@ -10,25 +10,29 @@
 #define _SCRATCH_UTIL
 
 #define CREATE_FUNCTION_TEST(symbol)                                    \
-    template <class Ret, class... Args>                        \
-    struct detect_fn_##symbol                                         \
-    {                                                                  \
-        template <class R = decltype(symbol(std::declval<Args>()...))> \
-        static typename std::enable_if<                                 \
-            std::is_same<typename std::decay<R>::type, Ret>::value, \
+    template <class Ret, class... Args>                                 \
+    struct detect_fn_##symbol                                           \
+    {                                                                   \
+        using DummyFn = typename std::conditional<                      \
+            std::is_same<Ret, void>::value, \
+            int, void>::type (*)(); \
+        DummyFn symbol;                                                 \
+        template <class R = decltype(symbol(std::declval<Args>()...))>  \
+        static typename std::enable_if<                             \
+            std::is_same<typename std::decay<Ret>::type, R>::value, \
             std::true_type>::type test(int); \
         static std::false_type test(...);                               \
         static const bool value = decltype(test(0))::value;             \
     };
 
-#define CREATE_MEMBER_TEST(symbol)                                      \
+#define CREATE_MEMBER_TEST(symbol)                               \
     template <class T, class U>                                         \
     struct detect_mem_##symbol                                         \
     {                                                                   \
-        using T_ = typename std::decay<T>::type;                        \
-        template<class V = decltype(T_::symbol)>                         \
+        template<class T_ = T>                                          \
         static typename std::enable_if<                                 \
-            std::is_same<typename std::decay<V>::type, U>::value, \
+            std::is_same<typename std::decay<U>::type,\
+                         decltype(T_::symbol)>::value,  \
             std::true_type>::type test(int); \
         static std::false_type test(...);                               \
         static const bool value = decltype(test(0))::value;             \
@@ -36,18 +40,18 @@
 
 #define CREATE_MEMBER_FUNCTION_TEST(symbol)                             \
     template <class T, class Ret, class... Args>                        \
-    struct detect_mem_fn_##symbol                                      \
-        : std::enable_if<std::is_class<T>::value>                       \
+    struct detect_mem_fn_##symbol                                       \
     {                                                                   \
-        using T_ = typename std::decay<T>::type;                        \
-        template <class R = decltype(                                   \
-            std::declval<T>().symbol(std::declval<Args>()...))>      \
-        static typename std::enable_if<                                 \
-            std::is_same<typename std::decay<R>::type, Ret>::value, \
-            std::true_type>::type test(int); \
-        static std::false_type test(...);                               \
-        static const bool value = decltype(test(0))::value;             \
-    };
+    template <class T_ = T,                                             \
+              class R = decltype(                                       \
+                  std::declval<T_>().symbol(std::declval<Args>()...))>  \
+    static typename std::enable_if<                                 \
+		std::is_class<T_>::value && \
+		std::is_same<typename std::decay<Ret>::type, R>::value, \
+		std::true_type>::type test(int); \
+    static std::false_type test(...);                                   \
+    static const bool value = decltype(test(0))::value;                 \
+};
 
 
 namespace util
@@ -234,7 +238,7 @@ namespace util
     
     template <class T, class... Args>
     auto make(Args&&... args)
-        -> decltype(T {std::forward<Args>(args)...})
+        -> decltype(T {std::forward<Args>(args)...}) // use declval here?
     { return T {std::forward<Args>(args)...}; }
 
     // string stuff
@@ -278,16 +282,15 @@ namespace util
         template <class T>
         using has_to_string = detect_mem_fn_to_string<T, std::string>;
         
-        // template <class T>
-        // struct has_to_string
-        //     : detect_mem_fn_to_string<T, std::string>
-        // {};
-        
         template <class T>
         enable_if_t<has_to_string<T>::value,
                     std::string>
-        to_string(T&& a)
+        to_string(T& a)
         { return a.to_string(); }
+
+        // template <class T, bool E = has_to_string<T>::value>
+        // std::string to_string(T&& a)
+        // { return a.to_string(); }
 
         // template <class T>
         // enable_if_t<!has_to_string<T>::value, std::string>
@@ -300,7 +303,7 @@ namespace util
         
         // CREATE_FUNCTION_TEST(to_string);
         // template <class T>
-        // using can_to_string = detect_fn_to_string<std::string, T>;
+        // using can_to_string = detect_fn_to_string<std::string, T&>;
         
         // template <class T>
         // util::enable_if_t<
@@ -327,8 +330,8 @@ namespace util
 // #include <iostream>
 // #include <typeinfo>
 
-int _f(int) { return 1; }
-void _g() {}
+int fn1(int) { return 1; }
+void fn2() {}
 
 using namespace util;
 
@@ -338,27 +341,36 @@ static_assert(!any_satisfy<std::is_integral, double, float>::value, "");
     
 static_assert(all_satisfy<std::is_integral, int, long, unsigned>::value, "");
 static_assert(!all_satisfy<std::is_integral, int, float>::value, "");
-static_assert(all_satisfy<std::is_function, decltype(_f), decltype(_g)>::value, "");
+static_assert(all_satisfy<std::is_function, decltype(fn1), decltype(fn2)>::value, "");
 
 static_assert(is_member<int, long, char, int>::value, "");
 static_assert(!is_member<int, double, long, float>::value, "");
     
 static_assert(std::is_same<
-              filter<std::is_integral, std::tuple<int, float, long> >::type,
+              Filter<std::is_integral, std::tuple<int, float, long> >,
               std::tuple<int, long> >::value, "");
 
 static_assert(std::is_same<
-              TransformT<add_pointer_t, std::tuple<int, float, char*> >,
+              Transform<add_pointer_t, std::tuple<int, float, char*> >,
               std::tuple<int*, float*, char**> >::value, "");
 
-struct _X { char name() { return 'X'; } };
-struct _Y { char name = 'Y'; };
-struct _Z { };
+struct FooX { char name(); int add(int);};
+struct FooY { static char name; };
+struct FooZ { };
+
+// CREATE_STATIC_MEMBER_TEST(name);
+
+// static_assert(detect_mem_name<FooY, char>::value, "");
+// static_assert(!detect_mem_name<FooX, char>::value, "");
+// static_assert(!detect_mem_name<FooZ, char>::value, "");
+
 
 CREATE_MEMBER_FUNCTION_TEST(name);
 
-static_assert(detect_mem_fn_name<_X, char>::value, "");
-static_assert(!detect_mem_fn_name<_Y, char>::value, "");
+static_assert(detect_mem_fn_name<FooX, char>::value, "");
+static_assert(!detect_mem_fn_name<FooY, char>::value, "");
+static_assert(!detect_mem_fn_name<FooZ, char>::value, "");
+
 
 struct _S { std::string to_string() { return std::string("ess"); }};
 
@@ -368,7 +380,7 @@ int main()
     // using util::io::to_string;
     _S s;
     auto r = to_string(s);
-    // std::cout << r;
+    std::cout << r << '\n';
     println(s);
 }
 
