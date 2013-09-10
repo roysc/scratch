@@ -13,6 +13,7 @@
     template <class Ret, class... Args>                                 \
     struct detect_fn_##symbol                                           \
     {                                                                   \
+        // Name a dummy function with an undesired type                 \
         using DummyFn = typename std::conditional<                      \
             std::is_same<Ret, void>::value, \
             int, void>::type (*)(); \
@@ -282,43 +283,20 @@ namespace util
         template <class T>
         using has_to_string = detect_mem_fn_to_string<T, std::string>;
         
-        template <class T>
-        enable_if_t<has_to_string<T>::value,
-                    std::string>
-        to_string(T& a)
+        template <class T,
+                  class = enable_if_t<has_to_string<T>::value> >
+        std::string to_string(T& a)
         { return a.to_string(); }
-
-        // template <class T, bool E = has_to_string<T>::value>
-        // std::string to_string(T&& a)
-        // { return a.to_string(); }
-
-        // template <class T>
-        // enable_if_t<!has_to_string<T>::value, std::string>
-        // to_string(T&& a)
-        // { return std::to_string(std::forward<T>(a)); }
-
         
-        
-        // the below is perhaps a bit too clever...
         
         // CREATE_FUNCTION_TEST(to_string);
         // template <class T>
         // using can_to_string = detect_fn_to_string<std::string, T&>;
         
-        // template <class T>
-        // util::enable_if_t<
-        //     can_to_string<T>::value,
-        //     std::ostream&>
-        // operator<<(std::ostream& out, T& a)
-        // {
-        //     return out << to_string(a);
-        // }
-
-        // template <class T>
-        // std::ostream& operator<<(std::ostream& out, T& a)
-        // {
-        //     return out << to_string(a);
-        // }
+        template <class T,
+                  class = enable_if_t<has_to_string<T>::value> >
+        std::ostream& operator<<(std::ostream& out, T& a)
+        { return out << to_string(a); }
 
     }
 
@@ -379,8 +357,8 @@ int main()
 {
     // using util::io::to_string;
     _S s;
-    auto r = to_string(s);
-    std::cout << r << '\n';
+    std::cout << to_string(s) << '\n';
+    std::cout << s << '\n';
     println(s);
 }
 
