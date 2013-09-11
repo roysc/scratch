@@ -1,36 +1,38 @@
 #include <algorithm>
+#include <functional>
 
 #include "util.hh"
 #include "entity_space.hh"
+#include "range.hh"
 
-template <class EntitySpace, class... Laws>
+template <class Space, class... Laws>
 struct System
 {
-    using EntityType = typename EntitySpace::EntityType;
-    using BitMask = std::bitset<EntitySpace::n_components>;
+    using EntityType = typename Space::EntityType;
+    using BitMask = std::bitset<Space::n_components>;
     using BitMasks = std::array<BitMask, sizeof...(Laws)>;
     using Routines = util::TypeVector<Laws...>;
 
     Routines routines;
-    EntitySpace space;
+    Space space;
     BitMasks masks;
 
     System()
+        // : routines(Routines(space)...)
     {
         BitMask mask;
         util::swallow {(
-            masks[get_index<Laws>()] =
-            Laws::template create_mask<EntitySpace>(),
-            0)...};
+            masks[util::index_of<Laws, Laws...>::value] =
+                Laws::template create_mask<Space>(),
+            
+        0)...};
+        
+        
     }
-    
-    template <class Law>
-    constexpr size_t get_index()
-    { return util::index_of<Law, Laws...>::value; }
 
     template <class Law>
     BitMask get_mask()
-    { return masks[get_index<Law>()]; }
+    { return masks[util::index_of<Law, Laws...>::value]; }
 
     /** Create a new entity with default components */
     template <class... InitCpts>
@@ -60,18 +62,18 @@ struct System
     
     void update()
     {
-        typename EntitySpace::Entities subjects;
+        // std::vector<EntityType> subjects;
+        std::vector<std::reference_wrapper<EntityType> > subjects;
         BitMask mask;
-        // auto supports = std::mem_fn(&EntityType::supports);
-        
+        auto supports =
+            [&] (const EntityType& ent) { return ent.supports(mask); };
+            // std::bind(std::mem_fn(&EntityType::supports));
+
         util::swallow {(
             mask = get_mask<Laws>(),
             std::copy_if(
                 space.begin(), space.end(), std::back_inserter(subjects),
-                // std::bind(supports, _1, mask),
-                [&] (const EntityType& ent) -> bool {
-                    return ent.supports(mask);
-                }),
+                supports),
             get_law<Laws>().run(subjects.begin(), subjects.end()),
             subjects.clear(),
             
@@ -85,32 +87,36 @@ struct Logic
 {
     using Index = util::TypeVector<Components...>;
 
-    template <class EntitySpace>
-    static typename EntitySpace::BitMask create_mask()
+    template <class Space>
+    static typename Space::BitMask create_mask()
     {
-        typename EntitySpace::BitMask mask;
+        typename Space::BitMask mask;
         size_t ix;
         
         util::swallow {(
             mask.set(util::index_within<
-                     Components, typename EntitySpace::Index>::value),
+                     Components, typename Space::Index>::value),
         0)...};
             
         return mask;
     }
 
-    
+    // template <class Space>
+    // void run(Space space)
     template <class EntityIt>
-    void run(EntityIt begin, EntityIt end)
+    void run(EntityIt it, EntityIt end)
     {
         println("Running Logic");
-        for (auto it = begin; it != end; ++it) {
+        
+        for (; it != end; ++it) {
+            // typename EntityIt::value_type::type& ent = *it;
+            auto& ent = *it;
             
             util::swallow {(
-                assert(it->template has_component<Components>()),
+                assert(ent.template has_component<Components>()),
             0)...};
             
-            operate(it->template get_component<Components>()...);
+            operate(ent.template get_component<Components>()...);
         }
     }
     
