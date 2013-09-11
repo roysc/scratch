@@ -90,7 +90,7 @@ struct Entity
     
     bool supports(BitMask mask) const
     {
-        return (mask & _description) == _description;
+        return (mask & _description) == mask;
     }
     
     std::string to_string() const
