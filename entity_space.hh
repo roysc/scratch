@@ -50,6 +50,10 @@ struct EntitySpace
         return id;
     }
 
+    template <class... InitCpts>
+    friend EntityID create_entity(EntitySpace& space)
+    { return space.template create_entity<InitCpts...>(); }
+    
     EntityType& operator[](EntityID id)
     { return m_entities[id]; }
 
@@ -57,10 +61,6 @@ struct EntitySpace
     Iterator end() { return m_entities.end(); }
 
 };
-
-template <class EntitySpace, class... Components>
-auto create_entity =
-    std::mem_fn(&EntitySpace::template create_entity<Components...>);
 
 
 #ifdef _BUILD_TEST

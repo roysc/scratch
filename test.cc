@@ -51,18 +51,11 @@ struct Velocity : public Vec2, public BasicComponent
     }
 };
 
-template <class EntitySpace>//, class... Components>
-struct Motion
+struct Motion : public Logic<Position, Velocity>
 {
-    static std::bitset<EntitySpace::n_components> mask;
-
-    Motion(EntitySpace& space)
+    void operate(Position& p, Velocity& v)
     {
-        
-    }
-    
-    void update(Position& p, Velocity v)
-    {
+        println("Motion operating on (", p, ", ", v, ")");
         p.x += v.x;
         p.y += v.y;
     }
@@ -77,9 +70,9 @@ int main(int argc, char *argv[]) {
     std::vector<EntityID> entsp, entsv, entspv;
     
     for (int i = 0; i < 5; i++) {
-        entsp.push_back(space.template create_entity<Position>());
-        entsv.push_back(space.template create_entity<Velocity>());
-        entspv.push_back(space.template create_entity<Position, Velocity>());
+        entsp.push_back(create_entity<Position>(space));
+        entsv.push_back(create_entity<Velocity>(space));
+        entspv.push_back(create_entity<Position, Velocity>(space));
     }
     
     for (auto ent : entsp) {
@@ -90,11 +83,8 @@ int main(int argc, char *argv[]) {
     for (auto ent : entsv) println(space[ent]);
     for (auto ent : entspv) println(space[ent]);
     
-    
-    // using Logic = LogicIndex<Motion>;
-
-    // using Game = GameSystem<CSpace, Logic>;
-    // Game game;
+    using Game = System<Space, Motion>;
+    Game game;
     
     // game.enqueue(
     //     CSpace::Spawn<RandomInput>(1),

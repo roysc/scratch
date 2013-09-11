@@ -3,34 +3,6 @@
 #include "util.hh"
 #include "entity_space.hh"
 
-template <class... Components>
-struct Logic
-{
-    template <class EntityIt>
-    void run(EntityIt begin, EntityIt end)
-    {
-        for (auto it = begin; it != end; ++it) {
-            auto& ent = *it;
-            util::swallow {(
-                assert(ent.template has_component<Components>()),
-            0)...};
-            
-        }
-    }
-
-    void operate(Components&&... cs);
-};
-
-struct C1 : public BasicComponent { };
-
-struct LogicExample : public Logic<C1>
-{
-    void operate(C1& c)
-    {
-        println("operating on ", c);
-    };
-};
-
 template <class EntitySpace, class... Routines>
 struct System
 {
@@ -66,4 +38,23 @@ struct System
         0)...};
         
     }
+};
+
+template <class... Components>
+struct Logic
+{
+    template <class EntityIt>
+    void run(EntityIt begin, EntityIt end)
+    {
+        for (auto it = begin; it != end; ++it) {
+            
+            util::swallow {(
+                assert(it->template has_component<Components>()),
+            0)...};
+            
+            operate(it->template get_component<Components>()...);
+        }
+    }
+
+    void operate(Components&&... cs);
 };
