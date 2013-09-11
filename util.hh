@@ -165,6 +165,10 @@ namespace util
     constexpr T&& get(std::tuple<Ts...>&& t)
     { return std::forward<T&&>(get<T>(t)); }
 
+    template <class T, class... Ts>
+    constexpr const T& get(const std::tuple<Ts...>& t)
+    { return std::get<index_of<T, Ts...>::value>(t); }
+
     
     // convenience stuff
     // until C++14
