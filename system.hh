@@ -61,7 +61,7 @@ struct System
         util::swallow {(
             mask = get_mask<Routines>(),
             std::copy_if(
-                space.begin(), space.end(), subjects.begin(),
+                space.begin(), space.end(), std::back_inserter(subjects),
                 // std::bind(supports, _2, mask),
                 [&] (const EntityType& ent) -> bool {
                     return ent.supports(mask);
