@@ -12,29 +12,40 @@ struct System
 
     EntitySpace space;
     BitMasks masks;
+
+    System()
+    {
+        BitMask mask;
+        util::swallow {(
+            masks[mask_index<Routines>()] = create_mask<Routines>(),
+            0)...};
+    }
     
     template <class Routine>
-    constexpr size_t mask_index()
+    constexpr size_t get_index()
     { return util::index_of<Routine, Routines...>::value; }
 
     template <class Routine>
     BitMask get_mask()
-    { return masks[mask_index<Routine>()]; }
+    { return masks[get_index<Routine>()]; }
     
     void update()
     {
         typename EntitySpace::Entities subjects;
         BitMask mask;
+        // auto supports = std::mem_fn(&EntityType::supports);
         
         util::swallow {(
             mask = get_mask<Routines>(),
             std::copy_if(
                 space.begin(), space.end(), subjects.begin(),
+                // std::bind(supports, _2, mask),
                 [&] (EntityType& ent) -> bool {
                     return ent.supports(mask);
                 }),
             Routines::run(subjects.begin(), subjects.end()),
             subjects.clear(),
+            
         0)...};
         
     }
@@ -43,6 +54,23 @@ struct System
 template <class... Components>
 struct Logic
 {
+    using Index = util::TypeVector<Components...>;
+
+    template <class EntitySpace>
+    BitMask create_mask()
+    {
+        BitMask mask;
+        size_t ix;
+        
+        util::swallow {(
+            mask.set(util::index_within<
+                     Components, typename EntitySpace::Index>::value),
+        0)...};
+            
+        return mask;
+    }
+
+    
     template <class EntityIt>
     void run(EntityIt begin, EntityIt end)
     {
@@ -55,6 +83,6 @@ struct Logic
             operate(it->template get_component<Components>()...);
         }
     }
-
-    void operate(Components&&... cs);
+    
+    void operate(Components&... cs);
 };
