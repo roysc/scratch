@@ -2,9 +2,9 @@
 #include <type_traits>
 #include <initializer_list>
 
-#include <string>
-#include <iostream>
 #include <sstream>
+#include <iostream>
+#include <string>
 
 #include "sfinae.hh"
 
@@ -107,7 +107,6 @@ namespace util
     template <class T, class U, class... Ts>
     struct index_of<T, U, Ts...>
         : public std::integral_constant<int, 1 + index_of<T, Ts...>::value>
-        // , public std::enable_if<is_member<T, Ts...>::value>
     {};
 
     template <class, class> struct index_within;
@@ -262,9 +261,6 @@ namespace util
 }
 
 #ifdef _BUILD_TEST
-
-// #include <iostream>
-// #include <typeinfo>
 
 int fn1(int) { return 1; }
 void fn2() {}
