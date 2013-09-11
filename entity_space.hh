@@ -21,6 +21,9 @@ struct EntitySpace
     using Index = util::TypeVector<Components...>;
     using EntityType = Entity<Components...>;
     using Entities = std::vector<EntityType>;
+    using Iterator = typename Entities::iterator;
+
+    static const size_t n_components = sizeof...(Components);
     
     // members
     Entities m_entities;
@@ -49,6 +52,9 @@ struct EntitySpace
 
     EntityType& operator[](EntityID id)
     { return m_entities[id]; }
+
+    Iterator begin() { return m_entities.begin(); }
+    Iterator end() { return m_entities.end(); }
 
 };
 

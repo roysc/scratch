@@ -5,9 +5,13 @@
 #include <algorithm>
 #include <array>
 #include <iostream>
+#include <bitset>
+
+#include <cassert>
 
 #include "util.hh"
 #include "entity_space.hh"
+#include "system.hh"
 
 using namespace util::io;
 
@@ -47,9 +51,16 @@ struct Velocity : public Vec2, public BasicComponent
     }
 };
 
-
+template <class EntitySpace>//, class... Components>
 struct Motion
 {
+    static std::bitset<EntitySpace::n_components> mask;
+
+    Motion(EntitySpace& space)
+    {
+        
+    }
+    
     void update(Position& p, Velocity v)
     {
         p.x += v.x;
@@ -71,7 +82,11 @@ int main(int argc, char *argv[]) {
         entspv.push_back(space.template create_entity<Position, Velocity>());
     }
     
-    for (auto ent : entsp) println(space[ent]);
+    for (auto ent : entsp) {
+        println(space[ent]);
+        std::bitset<2> b("11");
+        assert(space[ent].supports(b));
+    }
     for (auto ent : entsv) println(space[ent]);
     for (auto ent : entspv) println(space[ent]);
     
