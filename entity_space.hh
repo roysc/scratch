@@ -28,10 +28,8 @@ struct EntitySpace
     // members
     Entities m_entities;
     
-    template <class... InitCpts>
-    EntityID create_entity()
+    EntityID insert(EntityType&& entity)
     {
-        EntityType entity(Ref<InitCpts> {new InitCpts}...);
         EntityID id = 0;
 
         auto it = m_entities.begin();
@@ -39,20 +37,10 @@ struct EntitySpace
                !it->is_empty())
             ++it, ++id;
 
-        // println("it - begin = ", it - m_entities.begin(), "\n");
-        // println("creating Entity (id = ", id, "): ");
-
         m_entities.insert(it, std::move(entity));
-        
-        // println("# of entities = ", m_entities.size());
-        // println(m_entities[id]);
         
         return id;
     }
-
-    template <class... InitCpts>
-    friend EntityID create_entity(EntitySpace& space)
-    { return space.template create_entity<InitCpts...>(); }
     
     EntityType& operator[](EntityID id)
     { return m_entities[id]; }

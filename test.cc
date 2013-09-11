@@ -1,8 +1,5 @@
 #include <string>
 #include <vector>
-// #include <random>
-// #include <math>
-#include <algorithm>
 #include <array>
 #include <iostream>
 #include <bitset>
@@ -65,26 +62,26 @@ struct Motion : public Logic<Position, Velocity>
 int main(int argc, char *argv[]) {
     
     using Space = EntitySpace<Position, Velocity>;
-    Space space;
+    // Space space;
+    
+    using System = System<Space, Motion>;
+    System sys;
 
     std::vector<EntityID> entsp, entsv, entspv;
     
     for (int i = 0; i < 5; i++) {
-        entsp.push_back(create_entity<Position>(space));
-        entsv.push_back(create_entity<Velocity>(space));
-        entspv.push_back(create_entity<Position, Velocity>(space));
+        entsp.push_back(create_entity<Position>(sys));
+        entsv.push_back(create_entity<Velocity>(sys));
+        entspv.push_back(create_entity<Position, Velocity>(sys));
     }
     
     for (auto ent : entsp) {
-        println(space[ent]);
-        std::bitset<2> b("11");
-        assert(space[ent].supports(b));
+        println(sys.space[ent]);
+        // std::bitset<2> b("11");
+        // assert(space[ent].supports(b));
     }
-    for (auto ent : entsv) println(space[ent]);
-    for (auto ent : entspv) println(space[ent]);
-    
-    using Game = System<Space, Motion>;
-    Game game;
+    for (auto ent : entsv) println(sys.space[ent]);
+    for (auto ent : entspv) println(sys.space[ent]);
     
     // game.enqueue(
     //     CSpace::Spawn<RandomInput>(1),

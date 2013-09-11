@@ -28,6 +28,20 @@ struct System
     template <class Routine>
     BitMask get_mask()
     { return masks[get_index<Routine>()]; }
+
+    /** Create a new entity inside the system */
+    template <class... InitCpts>
+    EntityID create_entity()
+    {
+        EntityType entity(Ref<InitCpts> {new InitCpts}...);
+        return space.insert(std::move(entity));
+    }
+
+    // to avoid sys.template ... cruft
+    template <class... InitCpts>
+    friend EntityID create_entity(System& sys)
+    { return sys.template create_entity<InitCpts...>(); }
+
     
     void update()
     {
