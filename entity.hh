@@ -32,66 +32,59 @@ struct Entity
     // : util::transform_t<Ref, EntityIndex>;
 {
     using Contents = util::TypeVector<Ref<Components>...>;
-    Contents m_components;
+    Contents _components;
 
-    static const size_t capacity = sizeof...(Components);
-    using Description = std::bitset<capacity>;
-    Description m_description;
+    static const size_t n_components = sizeof...(Components);
+    using BitMask = std::bitset<n_components>;
+    BitMask _description;
 
     template <class... Cpts>
     Entity(Ref<Cpts>&&... args)
-        // : m_components { std::forward<Cpts>(args)... }
+        // : _components { std::forward<Cpts>(args)... }
     {
         util::swallow {(
-            util::get<Ref<Cpts> >(m_components) =
+            util::get<Ref<Cpts> >(_components) =
                 std::forward<Ref<Cpts> >(args),
             // println("setting Component ", *args),
             
         0)...};
 
         util::swallow {(
-            m_description.set(util::index_of<Cpts, Components...>::value),
+            _description.set(util::index_of<Cpts, Components...>::value),
         0)...};
 
-        // println(m_description);
+        // println(_description);
     }
 
-    bool is_empty() { return m_description.none(); }
+    bool is_empty() { return _description.none(); }
     
 
     template <class Cpt>
     void add_component(Ref<Cpt>&& cpt)
     {
-        util::get<Ref<Cpt> >(m_components) = std::move(cpt);
-        m_description.set(util::index_of<Cpt, Components...>::value);
+        util::get<Ref<Cpt> >(_components) = std::move(cpt);
+        _description.set(util::index_of<Cpt, Components...>::value);
     }
 
     template <class Cpt>
     bool has_component()
     {
         const auto ix = util::index_of<Cpt, Components...>::value;
-        return m_description.test(ix);
+        return _description.test(ix);
         
-        // return bool(util::get<Ref<Cpt> >(m_components));
+        // return bool(util::get<Ref<Cpt> >(_components));
     }
     
     template <class Cpt>
     Cpt get_component()
     {
         // assert(has_component<Cpt>() && "Component is not initialized!\n");
-        return *util::get<Ref<Cpt> >(m_components);
+        return *util::get<Ref<Cpt> >(_components);
     }
 
-    bool supports(std::bitset<capacity> flags)
+    bool supports(BitMask mask)
     {
-        util::swallow {(
-                m_description.set(
-                    util::index_of<Components, Components...>::value,
-                    has_component<Components>()),
-            0)...};            
-        // println()
-        
-        return (flags & m_description) == m_description;
+        return (mask & _description) == _description;
     }
     
     std::string to_string()
