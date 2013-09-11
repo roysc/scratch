@@ -19,11 +19,26 @@ using namespace util::io;
 
 struct BasicComponent
 {
-    std::string to_string() const
-    {
-        return std::string("BasicComponent");
-    }
+    static std::string name() { return "BasicComponent"; }
+    std::string to_string() const { return name(); }
 };
+
+CREATE_MEMBER_FUNCTION_TEST(name);
+template <class T>
+using has_name = detect_mem_fn_name<T, std::string>;
+
+template <class T>
+util::enable_if_t<has_name<T>::value,
+                  std::string>
+name()
+{ return T::name(); }
+
+template <class T>
+util::enable_if_t<!has_name<T>::value,
+                  std::string>
+name()
+{ return typeid(T).name(); }
+
 
 /** Provides unique identifiers for Components;
  *  Determines Component layout in entities.
