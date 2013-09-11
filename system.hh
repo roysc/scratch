@@ -34,7 +34,7 @@ struct System
     template <class... InitCpts>
     EntityID create_entity()
     {
-        EntityType entity(Ref<InitCpts> {new InitCpts}...);
+        EntityType entity(InitCpts {}...);
         return space.insert(std::move(entity));
     }
 
@@ -42,7 +42,7 @@ struct System
     // template <class... InitCpts>
     // EntityID create_entity(InitCpts&&... cpts)
     // {
-    //     EntityType entity(Ref<InitCpts> {new InitCpts(cpts)}...);
+    //     EntityType entity(InitCpts(cpts)...);
     //     return space.insert(std::move(entity));
     // }
 
@@ -107,5 +107,5 @@ struct Logic
         }
     }
     
-    static void operate(Components&... cs);
+    static void operate(Components&... cs) {}
 };

@@ -29,9 +29,9 @@ using EntityID = ulong;
  */
 template <class... Components>
 struct Entity
-    // : util::transform_t<Ref, EntityIndex>;
 {
-    using Contents = util::TypeVector<Ref<Components>...>;
+    // using Contents = util::TypeVector<Ref<Components>...>;
+    using Contents = util::TypeVector<Components...>;
     Contents _components;
 
     static const size_t n_components = sizeof...(Components);
@@ -39,12 +39,12 @@ struct Entity
     BitMask _description;
 
     template <class... Cpts>
-    Entity(Ref<Cpts>&&... args)
+    Entity(Cpts&&... args)
         // : _components { std::forward<Cpts>(args)... }
     {
         util::swallow {(
-            util::get<Ref<Cpts> >(_components) =
-                std::forward<Ref<Cpts> >(args),
+            util::get<Cpts >(_components) =
+                std::forward<Cpts >(args),
             // println("setting Component ", *args),
             
         0)...};
@@ -60,9 +60,9 @@ struct Entity
     
 
     template <class Cpt>
-    void add_component(Ref<Cpt>&& cpt)
+    void add_component(Cpt&& cpt)
     {
-        util::get<Ref<Cpt> >(_components) = std::move(cpt);
+        util::get<Cpt >(_components) = std::move(cpt);
         _description.set(util::index_of<Cpt, Components...>::value);
     }
 
@@ -71,17 +71,23 @@ struct Entity
     {
         const auto ix = util::index_of<Cpt, Components...>::value;
         return _description.test(ix);
-        
-        // return bool(util::get<Ref<Cpt> >(_components));
     }
     
     template <class Cpt>
     Cpt& get_component()
     {
         // assert(has_component<Cpt>() && "Component is not initialized!\n");
-        return *util::get<Ref<Cpt> >(_components);
+        return util::get<Cpt>(_components);
     }
 
+    template <class Cpt>
+    const Cpt& get_component() const
+    {
+        // assert(has_component<Cpt>() && "Component is not initialized!\n");
+        return util::get<Cpt>(_components);
+    }
+    
+    
     bool supports(BitMask mask) const
     {
         return (mask & _description) == _description;
