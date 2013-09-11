@@ -28,13 +28,13 @@ template <class T>
 using has_name = detect_mem_fn_name<T, std::string>;
 
 template <class T>
-util::enable_if_t<has_name<T>::value,
+std::enable_if_t<has_name<T>::value,
                   std::string>
 name()
 { return T::name(); }
 
 template <class T>
-util::enable_if_t<!has_name<T>::value,
+std::enable_if_t<!has_name<T>::value,
                   std::string>
 name()
 { return typeid(T).name(); }

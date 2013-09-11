@@ -11,10 +11,20 @@
 #ifndef _SCRATCH_UTIL
 #define _SCRATCH_UTIL
 
+namespace std
+{
+        // convenience stuff
+    // until C++14
+    template <class T>
+    using add_pointer_t = typename add_pointer<T>::type;
+
+    template <bool B, class T = void>
+    using enable_if_t = typename enable_if<B, T>::type;
+}
 
 namespace util
 {
-    namespace meta
+    namespace traits
     {
         /* ∀ T ∈ Ts where Pred<T> */
         template <template <class> class, class...>
@@ -55,47 +65,46 @@ namespace util
         {};
     }
 
-    namespace meta
+    using namespace traits;
+
+    
+    /** Filter a parameter pack */    
+    template <template <class> class, class> struct FilterImpl;
+
+    template <template <class> class Pred, template <class...> class Variadic>
+    struct FilterImpl<Pred, Variadic<> > { using type = Variadic<>; };
+    template <template <class> class Pred,
+              template <class...> class Variadic,
+              class T, class... Ts>
+    struct FilterImpl<Pred, Variadic<T, Ts...> >
     {
-        /** Filter a parameter pack */    
-        template <template <class> class, class> struct FilterImpl;
-
-        template <template <class> class Pred, template <class...> class Variadic>
-        struct FilterImpl<Pred, Variadic<> > { using type = Variadic<>; };
-        template <template <class> class Pred,
-                  template <class...> class Variadic,
-                  class T, class... Ts>
-        struct FilterImpl<Pred, Variadic<T, Ts...> >
-        {
-            template <class, class> struct Cons;
-            template <class Head, class... Tail>
-            struct Cons<Head, Variadic<Tail...> >
-            { using type = Variadic<Head, Tail...>; };
+        template <class, class> struct Cons;
+        template <class Head, class... Tail>
+        struct Cons<Head, Variadic<Tail...> >
+        { using type = Variadic<Head, Tail...>; };
         
-            using type = typename std::conditional<
-                Pred<T>::value,
-                typename Cons<T, typename FilterImpl<Pred, Variadic<Ts...> >::type>::type,
-                typename FilterImpl<Pred, Variadic<Ts...> >::type
-                >::type;
-        };
+        using type = typename std::conditional<
+            Pred<T>::value,
+            typename Cons<T, typename FilterImpl<Pred, Variadic<Ts...> >::type>::type,
+            typename FilterImpl<Pred, Variadic<Ts...> >::type
+            >::type;
+    };
 
-        template <template <class> class Pred, class Variadic>
-        using Filter = typename FilterImpl<Pred, Variadic>::type;
+    template <template <class> class Pred, class Variadic>
+    using Filter = typename FilterImpl<Pred, Variadic>::type;
 
     
-        /** Transform a variadic template */
-        template <template <class> class, class> struct TransformImpl;
+    /** Transform a variadic template */
+    template <template <class> class, class> struct TransformImpl;
 
-        template <template <class> class How,
-                  template <class...> class Variadic, class... Ts>
-        struct TransformImpl<How, Variadic<Ts...>>
-        { using type = Variadic<How<Ts>...>; };
+    template <template <class> class How,
+              template <class...> class Variadic, class... Ts>
+    struct TransformImpl<How, Variadic<Ts...>>
+    { using type = Variadic<How<Ts>...>; };
     
-        template <template <class> class How, class Variadic>
-        using Transform = typename TransformImpl<How, Variadic>::type;
-    }
-
-    using namespace meta;
+    template <template <class> class How, class Variadic>
+    using Transform = typename TransformImpl<How, Variadic>::type;
+    
     
     /** Enable lookup by type (until C++14 std::get) */
     template <class, class...> struct index_of;
@@ -170,13 +179,6 @@ namespace util
     { return std::get<index_of<T, Ts...>::value>(t); }
 
     
-    // convenience stuff
-    // until C++14
-    template <class T>
-    using add_pointer_t = typename std::add_pointer<T>::type;
-
-    template <bool B, class T = void>
-    using enable_if_t = typename std::enable_if<B, T>::type;
     
     /** Static-for functions */
     // using boost::mpl::for_each;
@@ -245,7 +247,7 @@ namespace util
             typename std::decay<T>::type, std::string>;
         
         template <class T,
-                  class = enable_if_t<has_to_string<T>::value> >
+                  class = std::enable_if_t<has_to_string<T>::value> >
         std::string to_string(T&& a)
         { return a.to_string(); }
         
@@ -255,7 +257,7 @@ namespace util
         // using can_to_string = detect_fn_to_string<std::string, T&>;
         
         template <class T,
-                  class = enable_if_t<has_to_string<T>::value> >
+                  class = std::enable_if_t<has_to_string<T>::value> >
         std::ostream& operator<<(std::ostream& out, T&& a)
         { return out << to_string(a); }
 
@@ -287,7 +289,7 @@ static_assert(std::is_same<
               std::tuple<int, long> >::value, "");
 
 static_assert(std::is_same<
-              Transform<add_pointer_t, std::tuple<int, float, char*> >,
+              Transform<std::add_pointer_t, std::tuple<int, float, char*> >,
               std::tuple<int*, float*, char**> >::value, "");
 
 

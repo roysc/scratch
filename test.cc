@@ -66,8 +66,6 @@ struct Velocity : public Vec2
 
 struct Motion : public Logic<Position, Velocity>
 {
-    using Logic<Position, Velocity>::run;
-    
     void operate(Position& p, Velocity& v)
     {
         // Logic<Position, Velocity>::operate(p, v);
@@ -91,7 +89,7 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < 5; i++) {
         // entsp.push_back(sys.template create_entity<Position>());
-        // entsp.push_back(sys.create_entity(Position (1,1)));
+        entsp.push_back(sys.create_entity(Position (1,1)));
         // entsv.push_back(sys.template create_entity<Velocity>());
         // entspv.push_back(sys.template create_entity<Position, Velocity>());
         entspv.push_back(sys.create_entity(
