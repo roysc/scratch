@@ -22,6 +22,7 @@ struct EntitySpace
     using EntityType = Entity<Components...>;
     using Entities = std::vector<EntityType>;
     using Iterator = typename Entities::iterator;
+    using BitMask = typename EntityType::BitMask;
 
     static const size_t n_components = sizeof...(Components);
     

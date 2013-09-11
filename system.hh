@@ -17,7 +17,8 @@ struct System
     {
         BitMask mask;
         util::swallow {(
-            masks[mask_index<Routines>()] = create_mask<Routines>(),
+            masks[get_index<Routines>()] =
+            Routines::template create_mask<EntitySpace>(),
             0)...};
     }
     
@@ -71,9 +72,9 @@ struct Logic
     using Index = util::TypeVector<Components...>;
 
     template <class EntitySpace>
-    BitMask create_mask()
+    static typename EntitySpace::BitMask create_mask()
     {
-        BitMask mask;
+        typename EntitySpace::BitMask mask;
         size_t ix;
         
         util::swallow {(
