@@ -56,7 +56,7 @@ struct Entity
         // println(_description);
     }
 
-    bool is_empty() { return _description.none(); }
+    bool is_empty() const { return _description.none(); }
     
 
     template <class Cpt>
@@ -67,7 +67,7 @@ struct Entity
     }
 
     template <class Cpt>
-    bool has_component()
+    bool has_component() const
     {
         const auto ix = util::index_of<Cpt, Components...>::value;
         return _description.test(ix);
@@ -76,18 +76,18 @@ struct Entity
     }
     
     template <class Cpt>
-    Cpt get_component()
+    Cpt& get_component()
     {
         // assert(has_component<Cpt>() && "Component is not initialized!\n");
         return *util::get<Ref<Cpt> >(_components);
     }
 
-    bool supports(BitMask mask)
+    bool supports(BitMask mask) const
     {
         return (mask & _description) == _description;
     }
     
-    std::string to_string()
+    std::string to_string() const
     {
         using util::io::print_to;
         
