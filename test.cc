@@ -3,6 +3,7 @@
 #include <array>
 #include <iostream>
 #include <bitset>
+#include <functional>
 
 #include <cassert>
 
@@ -50,7 +51,7 @@ struct Velocity : public Vec2, public BasicComponent
 
 struct Motion : public Logic<Position, Velocity>
 {
-    void operate(Position& p, Velocity& v)
+    static void operate(Position& p, Velocity& v)
     {
         println("Motion operating on (", p, ", ", v, ")");
         p.x += v.x;
@@ -68,20 +69,22 @@ int main(int argc, char *argv[]) {
     System sys;
 
     std::vector<EntityID> entsp, entsv, entspv;
-    
+
     for (int i = 0; i < 5; i++) {
-        entsp.push_back(create_entity<Position>(sys));
-        entsv.push_back(create_entity<Velocity>(sys));
-        entspv.push_back(create_entity<Position, Velocity>(sys));
+        entsp.push_back(sys.template create_entity<Position>());
+        entsv.push_back(sys.template create_entity<Velocity>());
+        entspv.push_back(sys.template create_entity<Position, Velocity>());
     }
     
-    for (auto ent : entsp) {
+    for (auto ent : entsp) 
         println(sys.space[ent]);
-        // std::bitset<2> b("11");
-        // assert(space[ent].supports(b));
-    }
-    for (auto ent : entsv) println(sys.space[ent]);
-    for (auto ent : entspv) println(sys.space[ent]);
+    
+    for (auto ent : entsv)
+        println(sys.space[ent]);
+    for (auto ent : entspv)
+        println(sys.space[ent]);
+
+    sys.update();
     
     // game.enqueue(
     //     CSpace::Spawn<RandomInput>(1),

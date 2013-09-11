@@ -30,7 +30,7 @@ struct System
     BitMask get_mask()
     { return masks[get_index<Routine>()]; }
 
-    /** Create a new entity inside the system */
+    /** Create a new entity with default components */
     template <class... InitCpts>
     EntityID create_entity()
     {
@@ -38,10 +38,18 @@ struct System
         return space.insert(std::move(entity));
     }
 
-    // to avoid sys.template ... cruft
-    template <class... InitCpts>
-    friend EntityID create_entity(System& sys)
-    { return sys.template create_entity<InitCpts...>(); }
+    // /** Create a new entity with specified components */
+    // template <class... InitCpts>
+    // EntityID create_entity(InitCpts&&... cpts)
+    // {
+    //     EntityType entity(Ref<InitCpts> {new InitCpts(cpts)}...);
+    //     return space.insert(std::move(entity));
+    // }
+
+    // // to avoid sys.template ... cruft
+    // template <class... InitCpts>
+    // friend EntityID create_entity(System& sys)
+    // { return sys.template create_entity<InitCpts...>(); }
 
     
     void update()
@@ -55,7 +63,7 @@ struct System
             std::copy_if(
                 space.begin(), space.end(), subjects.begin(),
                 // std::bind(supports, _2, mask),
-                [&] (EntityType& ent) -> bool {
+                [&] (const EntityType& ent) -> bool {
                     return ent.supports(mask);
                 }),
             Routines::run(subjects.begin(), subjects.end()),
@@ -87,7 +95,7 @@ struct Logic
 
     
     template <class EntityIt>
-    void run(EntityIt begin, EntityIt end)
+    static void run(EntityIt begin, EntityIt end)
     {
         for (auto it = begin; it != end; ++it) {
             
@@ -99,5 +107,5 @@ struct Logic
         }
     }
     
-    void operate(Components&... cs);
+    static void operate(Components&... cs);
 };
