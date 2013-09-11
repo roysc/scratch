@@ -38,13 +38,13 @@ struct System
         return space.insert(std::move(entity));
     }
 
-    // /** Create a new entity with specified components */
-    // template <class... InitCpts>
-    // EntityID create_entity(InitCpts&&... cpts)
-    // {
-    //     EntityType entity(InitCpts(cpts)...);
-    //     return space.insert(std::move(entity));
-    // }
+    /** Create a new entity with specified components */
+    template <class... InitCpts>
+    EntityID create_entity(InitCpts&&... cpts)
+    {
+        EntityType entity(std::forward<InitCpts>(cpts)...);
+        return space.insert(std::move(entity));
+    }
 
     // // to avoid sys.template ... cruft
     // template <class... InitCpts>
@@ -62,7 +62,7 @@ struct System
             mask = get_mask<Routines>(),
             std::copy_if(
                 space.begin(), space.end(), std::back_inserter(subjects),
-                // std::bind(supports, _2, mask),
+                // std::bind(supports, _1, mask),
                 [&] (const EntityType& ent) -> bool {
                     return ent.supports(mask);
                 }),

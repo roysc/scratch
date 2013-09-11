@@ -15,30 +15,43 @@ using namespace util::io;
 
 struct Vec2 : public BasicComponent
 {
-    using Number = uint;
+    using Number = int;
+    using Array = std::array<Number, 2>;
     union {                                     
-        std::array<Number, 2> v;
+        Array v;
         struct { Number x, y; };                
     };                                          
                                                 
-    Vec2() : v {{0, 0}} {}                
-    using InputType = decltype(v);
+    Vec2(Array a) : v(a) {}
+    Vec2(Number _x, Number _y) : v {{_x, _y}} {}
+    Vec2() : v {{0, 0}} {}
+    
+    using InputType = Array;
+
+    // std::string to_string() const
+    // {
+    //     std::stringstream out;
+    //     print_to(out, name(), "(", x, ", ", y, ")");
+    //     return out.str();
+    // }
 };
 
 
-struct Position : public Vec2, public BasicComponent
+struct Position : public Vec2
 {
     static std::string name() { return "Position"; }
     std::string to_string() const
     {
         std::stringstream out;
-        print_to(out, name(), "(", x, ", ", y, ")");
+        print_to(out, "Position(", x, ", ", y, ")");
         return out.str();
     }
+
+    using Vec2::Vec2;
 };
 
 
-struct Velocity : public Vec2, public BasicComponent
+struct Velocity : public Vec2
 {
     static std::string name() { return "Velocity"; }
     std::string to_string() const
@@ -47,6 +60,8 @@ struct Velocity : public Vec2, public BasicComponent
         print_to(out, "Velocity(", x, ", ", y, ")");
         return out.str();
     }
+
+    using Vec2::Vec2;
 };
 
 struct Motion : public Logic<Position, Velocity>
@@ -71,21 +86,23 @@ int main(int argc, char *argv[]) {
     std::vector<EntityID> entsp, entsv, entspv;
 
     for (int i = 0; i < 5; i++) {
-        entsp.push_back(sys.template create_entity<Position>());
-        entsv.push_back(sys.template create_entity<Velocity>());
-        entspv.push_back(sys.template create_entity<Position, Velocity>());
+        // entsp.push_back(sys.template create_entity<Position>());
+        // entsp.push_back(sys.create_entity(Position (1,1)));
+        // entsv.push_back(sys.template create_entity<Velocity>());
+        // entspv.push_back(sys.template create_entity<Position, Velocity>());
+        entspv.push_back(sys.create_entity(
+                             Position(), Velocity(1, -1)));
     }
     
-    for (auto ent : entsp) 
-        println(sys.space[ent]);
+    // for (auto ent : entsp) println(sys.space[ent]);
+    // for (auto ent : entsv) println(sys.space[ent]);
     
-    for (auto ent : entsv)
-        println(sys.space[ent]);
-    for (auto ent : entspv)
-        println(sys.space[ent]);
+    for (auto ent : entspv) println(sys.space[ent]);
 
     sys.update();
     
+    for (auto ent : entspv) println(sys.space[ent]);
+
     // game.enqueue(
     //     CSpace::Spawn<RandomInput>(1),
     //     CSpace::Spawn<Position>(n_ent, )

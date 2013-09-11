@@ -57,7 +57,6 @@ struct Entity
     }
 
     bool is_empty() const { return _description.none(); }
-    
 
     template <class Cpt>
     void add_component(Cpt&& cpt)
@@ -75,17 +74,11 @@ struct Entity
     
     template <class Cpt>
     Cpt& get_component()
-    {
-        // assert(has_component<Cpt>() && "Component is not initialized!\n");
-        return util::get<Cpt>(_components);
-    }
+    { return util::get<Cpt>(_components); }
 
     template <class Cpt>
     const Cpt& get_component() const
-    {
-        // assert(has_component<Cpt>() && "Component is not initialized!\n");
-        return util::get<Cpt>(_components);
-    }
+    { return util::get<Cpt>(_components); }
     
     
     bool supports(BitMask mask) const
