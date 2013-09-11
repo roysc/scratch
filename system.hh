@@ -3,13 +3,15 @@
 #include "util.hh"
 #include "entity_space.hh"
 
-template <class EntitySpace, class... Routines>
+template <class EntitySpace, class... Laws>
 struct System
 {
     using EntityType = typename EntitySpace::EntityType;
     using BitMask = std::bitset<EntitySpace::n_components>;
-    using BitMasks = std::array<BitMask, sizeof...(Routines)>;
+    using BitMasks = std::array<BitMask, sizeof...(Laws)>;
+    using Routines = util::TypeVector<Laws...>;
 
+    Routines routines;
     EntitySpace space;
     BitMasks masks;
 
@@ -17,18 +19,18 @@ struct System
     {
         BitMask mask;
         util::swallow {(
-            masks[get_index<Routines>()] =
-            Routines::template create_mask<EntitySpace>(),
+            masks[get_index<Laws>()] =
+            Laws::template create_mask<EntitySpace>(),
             0)...};
     }
     
-    template <class Routine>
+    template <class Law>
     constexpr size_t get_index()
-    { return util::index_of<Routine, Routines...>::value; }
+    { return util::index_of<Law, Laws...>::value; }
 
-    template <class Routine>
+    template <class Law>
     BitMask get_mask()
-    { return masks[get_index<Routine>()]; }
+    { return masks[get_index<Law>()]; }
 
     /** Create a new entity with default components */
     template <class... InitCpts>
@@ -51,6 +53,10 @@ struct System
     // friend EntityID create_entity(System& sys)
     // { return sys.template create_entity<InitCpts...>(); }
 
+    template <class L>
+    L& get_law()
+    { return util::get<L>(routines); }
+
     
     void update()
     {
@@ -59,14 +65,14 @@ struct System
         // auto supports = std::mem_fn(&EntityType::supports);
         
         util::swallow {(
-            mask = get_mask<Routines>(),
+            mask = get_mask<Laws>(),
             std::copy_if(
                 space.begin(), space.end(), std::back_inserter(subjects),
                 // std::bind(supports, _1, mask),
                 [&] (const EntityType& ent) -> bool {
                     return ent.supports(mask);
                 }),
-            Routines::run(subjects.begin(), subjects.end()),
+            get_law<Laws>().run(subjects.begin(), subjects.end()),
             subjects.clear(),
             
         0)...};
@@ -95,8 +101,9 @@ struct Logic
 
     
     template <class EntityIt>
-    static void run(EntityIt begin, EntityIt end)
+    void run(EntityIt begin, EntityIt end)
     {
+        println("Running Logic");
         for (auto it = begin; it != end; ++it) {
             
             util::swallow {(
@@ -107,5 +114,20 @@ struct Logic
         }
     }
     
-    static void operate(Components&... cs) {}
+    void operate(Components&... cs)
+    {
+        println("Base Logic::operate");
+    }
+
+    std::string to_string() const
+    {
+        std::stringstream out;
+        bool at_0 = true;
+        util::swallow {(
+                print_to(out, at_0 ? "" : ", ",
+                         name<Components>()),
+                at_0 = false,
+                0)...};
+        return out.str();
+    }
 };

@@ -66,8 +66,12 @@ struct Velocity : public Vec2
 
 struct Motion : public Logic<Position, Velocity>
 {
-    static void operate(Position& p, Velocity& v)
+    using Logic<Position, Velocity>::run;
+    
+    void operate(Position& p, Velocity& v)
     {
+        // Logic<Position, Velocity>::operate(p, v);
+            
         println("Motion operating on (", p, ", ", v, ")");
         p.x += v.x;
         p.y += v.y;
