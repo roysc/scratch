@@ -114,7 +114,7 @@ struct Logic
         }
     }
     
-    void operate(Components&... cs)
+    virtual void operate(Components&... cs)
     {
         println("Base Logic::operate");
     }
