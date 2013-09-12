@@ -64,10 +64,11 @@ struct FilterRange
 };
 
 template <class Predicate, class Iterator>
-FilterRange<Predicate, Iterator>
-filter(Predicate f, Iterator it, Iterator end)
+FilterRange<Predicate, Iterator>&&
+filter(Iterator it, Iterator end, Predicate&& f)
 {
-    return FilterRange<Predicate, Iterator>(f, it, end);
+    return FilterRange<Predicate, Iterator>(
+        std::forward<Predicate>(f), it, end);
 }
 }
 
