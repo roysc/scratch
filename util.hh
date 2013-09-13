@@ -63,6 +63,23 @@ namespace util
         template <class T, template <class...> class Variadic, class... Ts>
         struct is_member<T, Variadic<Ts...> > : is_member<T, Ts...>
         {};
+
+        
+        template <class Pred>
+        using neg = std::integral_constant<bool, !Pred::value>;
+        
+        template <class T>
+        struct is_iterable
+        {
+            template <class T_ = T,
+                      class B = decltype(std::begin(std::declval<T_>())),
+                      class E = decltype(std::end(std::declval<T_>()))> 
+            static std::enable_if_t<
+                std::is_same<B, E>::value,
+                std::true_type> test(int);
+            static std::false_type test(...);
+            static const bool value = decltype(test(0))::value;
+        };
     }
 
     using namespace traits;
@@ -235,11 +252,32 @@ namespace util
             out << ")";
         }
 
-        template <class... Args>
+        template <class... Ts>
         std::ostream& operator<<(std::ostream& out,
-                                 const std::tuple<Args...>& t)
-        { _print_tuple(out, t, indices_for<std::tuple<Args...> > {}); }
+                                 const std::tuple<Ts...>& t)
+        { _print_tuple(out, t, indices_for<std::tuple<Ts...> > {}); }
 
+
+        template <class T>
+        using is_string = neg<
+            is_member<decltype(*std::begin(std::declval<T>())),
+                      char, wchar_t, char16_t, char32_t> >;
+        
+        template <class C,
+                  class = std::enable_if_t<
+                      is_iterable<C>::value &&
+                      !is_string<C>::value> >
+        std::ostream& operator<<(std::ostream& out, const C& c)
+        {
+            out << "[";
+            bool first = true;
+            for (auto it = std::begin(c); it != std::end(c); ++it) {
+                if (!first) out << ", ";
+                out << *it;
+                first = false;
+            }
+            out << "]";
+        }
         
         CREATE_MEMBER_FUNCTION_TEST(to_string);
         template <class T>
