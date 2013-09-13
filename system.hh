@@ -63,19 +63,26 @@ struct System
     void update()
     {
         // std::vector<EntityType> subjects;
-        std::vector<std::reference_wrapper<EntityType> > subjects;
+        // std::vector<std::reference_wrapper<EntityType> > subjects;
         BitMask mask;
         auto supports =
             [&] (const EntityType& ent) { return ent.supports(mask); };
             // std::bind(std::mem_fn(&EntityType::supports));
-
+        // using View = typename
+        //     range::FilterRange<decltype(supports),
+        //                        typename Space::iterator>;
+        // auto subjects =
+        //     range::filter(supports, space.begin(), space.begin());
+        
         util::swallow {(
             mask = get_mask<Laws>(),
-            std::copy_if(
-                space.begin(), space.end(), std::back_inserter(subjects),
-                supports),
-            get_law<Laws>().run(subjects.begin(), subjects.end()),
-            subjects.clear(),
+            // std::copy_if(
+            //     space.begin(), space.end(), std::back_inserter(subjects),
+            //     supports),
+            // get_law<Laws>().run(subjects.begin(), subjects.end()),
+            get_law<Laws>().run(
+                range::filter(space.begin(), space.end(), supports)),
+            // subjects.clear(),
             
         0)...};
         
@@ -101,8 +108,6 @@ struct Logic
         return mask;
     }
 
-    // template <class Space>
-    // void run(Space space)
     template <class EntityIt>
     void run(EntityIt it, EntityIt end)
     {
@@ -119,6 +124,11 @@ struct Logic
             operate(ent.template get_component<Components>()...);
         }
     }
+
+    template <class Range>
+    void run(Range r)
+    { run(r.begin(), r.end()); }
+
     
     virtual void operate(Components&... cs)
     {

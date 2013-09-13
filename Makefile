@@ -4,8 +4,8 @@ CC		= g++
 CFLAGS	= -g -std=c++11 $(OPT) -w -D_DEBUG
 LFLAGS  = 
 OBJ_FILES = \
-	common.o sfinae.o util.o \
-	entity.o component.o entity_space.o system.o
+	common.o sfinae.o range.o util.o \
+	entity.o component.o entity_space.o system.o 
 
 BIN = test
 
