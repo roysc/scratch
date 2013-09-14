@@ -18,7 +18,6 @@ struct System
     BitMasks masks;
 
     System()
-        // : routines(Routines(space)...)
     {
         BitMask mask;
         util::swallow {(
@@ -62,27 +61,14 @@ struct System
     
     void update()
     {
-        // std::vector<EntityType> subjects;
-        // std::vector<std::reference_wrapper<EntityType> > subjects;
         BitMask mask;
         auto supports =
             [&] (const EntityType& ent) { return ent.supports(mask); };
-            // std::bind(std::mem_fn(&EntityType::supports));
-        // using View = typename
-        //     range::FilterRange<decltype(supports),
-        //                        typename Space::iterator>;
-        // auto subjects =
-        //     range::filter(supports, space.begin(), space.begin());
         
         util::swallow {(
             mask = get_mask<Laws>(),
-            // std::copy_if(
-            //     space.begin(), space.end(), std::back_inserter(subjects),
-            //     supports),
-            // get_law<Laws>().run(subjects.begin(), subjects.end()),
             get_law<Laws>().run(
                 range::filter(supports, space.begin(), space.end())),
-            // subjects.clear(),
             
         0)...};
         
@@ -98,7 +84,6 @@ struct Logic
     static typename Space::BitMask create_mask()
     {
         typename Space::BitMask mask;
-        size_t ix;
         
         util::swallow {(
             mask.set(util::index_within<
@@ -108,14 +93,13 @@ struct Logic
         return mask;
     }
 
-    template <class EntityIt>
-    void run(EntityIt it, EntityIt end)
+    template <class Entities>
+    void run(Entities ents)
     {
         println("Running Logic");
         
-        for (; it != end; ++it) {
-            // typename EntityIt::value_type::type& ent = *it;
-            auto& ent = *it;
+        for (auto& ent : ents) {
+            println(ent);
             
             util::swallow {(
                 assert(ent.template has_component<Components>()),
@@ -125,25 +109,27 @@ struct Logic
         }
     }
 
-    template <class Range>
-    void run(Range r)
-    { run(r.begin(), r.end()); }
-
     
     virtual void operate(Components&... cs)
     {
-        println("Base Logic::operate");
+        println("Empty Logic operation");
     }
 
     std::string to_string() const
     {
+        using util::io::print_to;
+        
         std::stringstream out;
+        out << "Logic<";
+        
         bool at_0 = true;
         util::swallow {(
                 print_to(out, at_0 ? "" : ", ",
                          name<Components>()),
                 at_0 = false,
                 0)...};
+        
+        out << ">";
         return out.str();
     }
 };

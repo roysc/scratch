@@ -68,7 +68,7 @@ struct Entity
     template <class Cpt>
     bool has_component() const
     {
-        const auto ix = util::index_of<Cpt, Components...>::value;
+        auto ix = util::index_of<Cpt, Components...>::value;
         return m_description.test(ix);
     }
     
