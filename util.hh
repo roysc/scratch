@@ -332,17 +332,7 @@ static_assert(std::is_same<
               std::tuple<int*, float*, char**> >::value, "");
 
 
-struct S { std::string to_string() { return std::string("ess"); }};
-
 // void test_to_string()
-int main()
-{
-    // using util::io::to_string;
-    S s;
-    std::cout << to_string(s) << '\n';
-    std::cout << s << '\n';
-    println(s);
-}
 
 
 #endif
