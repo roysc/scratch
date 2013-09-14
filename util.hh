@@ -1,6 +1,7 @@
 #include <tuple>
 #include <type_traits>
 #include <initializer_list>
+#include <iterator>
 
 #include <sstream>
 #include <iostream>
@@ -20,6 +21,9 @@ namespace std
 
     template <bool B, class T = void>
     using enable_if_t = typename enable_if<B, T>::type;
+
+    template <class T>
+    using decay_t = typename decay<T>::type;
 }
 
 namespace util
@@ -71,7 +75,7 @@ namespace util
         template <class T>
         struct is_iterable
         {
-            template <class T_ = T,
+            template <class T_ = std::decay_t<T>,
                       class B = decltype(std::begin(std::declval<T_>())),
                       class E = decltype(std::end(std::declval<T_>()))> 
             static std::enable_if_t<
@@ -239,7 +243,7 @@ namespace util
 
         template <class... Args>
         std::ostream& println(Args&&... args)
-        { return print(std::forward<Args>(args)..., "\n"); }
+        { return print(std::forward<Args>(args)..., '\n'); }
 
         
         template <class Tuple, size_t... Is>
@@ -259,9 +263,19 @@ namespace util
 
 
         template <class T>
-        using is_string = neg<
-            is_member<decltype(*std::begin(std::declval<T>())),
-                      char, wchar_t, char16_t, char32_t> >;
+        struct is_string
+        {
+            template <class T_ = std::decay_t<T>,
+                      class Val = typename std::iterator_traits<
+                          decltype(std::begin(std::declval<T_>()))
+                          >::value_type>
+            static std::enable_if_t<
+                std::is_same<T_, std::basic_string<Val> >::value,
+                std::true_type> test(int);
+            static std::false_type test(...);
+            static const bool value = decltype(test(0))::value;
+        };
+
         
         template <class C,
                   class = std::enable_if_t<
@@ -269,14 +283,14 @@ namespace util
                       !is_string<C>::value> >
         std::ostream& operator<<(std::ostream& out, const C& c)
         {
-            out << "[";
+            out << '[';
             bool first = true;
             for (auto it = std::begin(c); it != std::end(c); ++it) {
                 if (!first) out << ", ";
                 out << *it;
                 first = false;
             }
-            out << "]";
+            out << ']';
         }
         
         CREATE_MEMBER_FUNCTION_TEST(to_string);
