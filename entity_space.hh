@@ -24,7 +24,7 @@ struct EntitySpace
     using Iterator = typename Entities::iterator;
     using BitMask = typename EntityType::BitMask;
 
-    static const size_t n_components = sizeof...(Components);
+    static const size_t max_components = sizeof...(Components);
     
     // members
     Entities m_entities;

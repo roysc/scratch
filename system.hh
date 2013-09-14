@@ -9,7 +9,7 @@ template <class Space, class... Laws>
 struct System
 {
     using EntityType = typename Space::EntityType;
-    using BitMask = std::bitset<Space::n_components>;
+    using BitMask = std::bitset<Space::max_components>;
     using BitMasks = std::array<BitMask, sizeof...(Laws)>;
     using Routines = util::TypeVector<Laws...>;
 
