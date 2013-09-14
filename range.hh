@@ -61,8 +61,8 @@ namespace range
     };
 
     template <class Predicate, class It>
-    FilterRange<Predicate, It>&&
-    filter(It it, It end, Predicate&& f)
+    FilterRange<Predicate, It>
+    filter(Predicate&& f, It it, It end)
     {
         return FilterRange<Predicate, It>(
             std::forward<Predicate>(f),
