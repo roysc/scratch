@@ -32,58 +32,58 @@ struct Entity
 {
     // using Contents = util::TypeVector<Ref<Components>...>;
     using Contents = util::TypeVector<Components...>;
-    Contents _components;
+    Contents m_components;
 
-    static const size_t n_components = sizeof...(Components);
-    using BitMask = std::bitset<n_components>;
-    BitMask _description;
+    static const size_t max_components = sizeof...(Components);
+    using BitMask = std::bitset<max_components>;
+    BitMask m_description;
 
     template <class... Cpts>
     Entity(Cpts&&... args)
-        // : _components { std::forward<Cpts>(args)... }
+        // : m_components { std::forward<Cpts>(args)... }
     {
         util::swallow {(
-            util::get<Cpts >(_components) =
+            util::get<Cpts >(m_components) =
                 std::forward<Cpts >(args),
             // println("setting Component ", *args),
             
         0)...};
 
         util::swallow {(
-            _description.set(util::index_of<Cpts, Components...>::value),
+            m_description.set(util::index_of<Cpts, Components...>::value),
         0)...};
 
-        // println(_description);
+        // println(m_description);
     }
 
-    bool is_empty() const { return _description.none(); }
+    bool is_empty() const { return m_description.none(); }
 
     template <class Cpt>
     void add_component(Cpt&& cpt)
     {
-        util::get<Cpt >(_components) = std::move(cpt);
-        _description.set(util::index_of<Cpt, Components...>::value);
+        util::get<Cpt >(m_components) = std::move(cpt);
+        m_description.set(util::index_of<Cpt, Components...>::value);
     }
 
     template <class Cpt>
     bool has_component() const
     {
         const auto ix = util::index_of<Cpt, Components...>::value;
-        return _description.test(ix);
+        return m_description.test(ix);
     }
     
     template <class Cpt>
     Cpt& get_component()
-    { return util::get<Cpt>(_components); }
+    { return util::get<Cpt>(m_components); }
 
     template <class Cpt>
     const Cpt& get_component() const
-    { return util::get<Cpt>(_components); }
+    { return util::get<Cpt>(m_components); }
     
     
     bool supports(BitMask mask) const
     {
-        return (mask & _description) == mask;
+        return (mask & m_description) == mask;
     }
     
     std::string to_string() const

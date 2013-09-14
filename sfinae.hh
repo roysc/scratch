@@ -11,7 +11,7 @@
         using DummyFn = typename std::conditional<                      \
             std::is_same<Ret, void>::value, \
             int, void>::type (*)(); \
-        DummyFn symbol;                                                 \
+        // DummyFn symbol;                                              \
         template <class R = decltype(symbol(std::declval<Args>()...))>  \
         static typename std::enable_if<                             \
             std::is_same<typename std::decay<Ret>::type, R>::value, \
