@@ -7,68 +7,62 @@
 
 namespace range
 {
-    template <class Predicate, class IterBase>
+    template <class R>
+    struct RangeIterator : std::iterator<
+        std::forward_iterator_tag,
+        typename R::BaseTraits::value_type,
+        typename R::BaseTraits::difference_type,
+        typename R::BaseTraits::pointer,
+        typename R::BaseTraits::reference>
+    {
+        RangeIterator(const R& r)
+            : m_range(r)
+        { }
+            
+        typename R::BaseTraits::reference
+        operator*() const { return m_range.front(); }
+
+        RangeIterator& operator++() { m_range.pop_front(); }
+
+        bool operator!=(const RangeIterator& that)
+        { return m_range.has_next(); }
+
+      private:
+        R m_range;
+    };
+    
+    
+    template <class Predicate, class It>
     struct FilterRange
     {
-        using BaseTraits = std::iterator_traits<IterBase>;
+        using BaseTraits = std::iterator_traits<It>;
         using ElementType = typename BaseTraits::value_type;
         using Reference = ElementType&;
 
-        struct Iterator : std::iterator<
-            std::forward_iterator_tag,
-            typename BaseTraits::value_type,
-            typename BaseTraits::difference_type,
-            typename BaseTraits::pointer,
-            typename BaseTraits::reference>
-        {
-            Predicate m_pred;
-            IterBase m_base, m_end;
-            
-            Iterator(const Predicate& pred,
-                     const IterBase& it, const IterBase& end)
-                : m_pred(pred), m_base(it), m_end(end)
-            { satisfy_predicate(); }
-        
-            Reference operator*() const { return *m_base; }
-
-            Iterator& operator++()
-            {
-                ++m_base;
-                satisfy_predicate();
-            }
-
-            bool operator==(const Iterator& that)
-            { return m_base == that.m_base; }
-
-            bool operator!=(const Iterator& that)
-            { return !(*this == that); }
-    
-            void satisfy_predicate()
-            {
-                while (m_base != m_end && !m_pred(*m_base))
-                    ++m_base;
-            }
-        };
-    
-        FilterRange(const Predicate& f, const IterBase& it, const IterBase& end)
+        FilterRange(const Predicate& f, const It& it, const It& end)
             : m_pred(f), m_cursor(it), m_end(end)
         { }
         
-        Reference front() { return *m_cursor; }
+        Reference front() const { return *m_cursor; }
 
-        void pop_front() { ++m_cursor; }
+        void pop_front()
+        {
+            ++m_cursor;
+            satisfy_predicate();
+        }
 
-        bool has_next() { return m_cursor != m_end; }
-
-        Iterator begin() const
-        { return Iterator(m_pred, m_cursor, m_end); }
-        
-        Iterator end() const
-        { return Iterator(m_pred, m_end, m_end); }
+        bool has_next() const { return m_cursor != m_end; }
 
       private:
+        void satisfy_predicate()
+        {
+            while (m_cursor != m_end && !m_pred(*m_cursor))
+                ++m_cursor;
+        }
+        
+      private:
         Predicate m_pred;
-        IterBase m_cursor, m_end;
+        It m_cursor, m_end;
     };
 
     template <class Predicate, class It>
@@ -92,11 +86,11 @@ namespace range
             : m_cursor(beg), m_end(end)
         { }
         
-        Reference front() { return *m_cursor; }
+        Reference front() const { return *m_cursor; }
 
         void pop_front() { ++m_cursor; }
 
-        bool has_next() { return m_cursor != m_end; }
+        bool has_next() const { return m_cursor != m_end; }
         
       private:
         It m_cursor, m_end;
@@ -116,17 +110,40 @@ namespace range
                   class PopFront = decltype(std::declval<T_>().pop_front())>
         static std::enable_if_t<
             std::is_lvalue_reference<EltRef>::value &&
-        std::is_same<HasNext, bool>::value,
+            std::is_same<HasNext, bool>::value,
             std::true_type> test(int);
         static std::false_type test(...);
         static const bool value = decltype(test(0))::value;
     };
 
     template <class T>
-    using is_range = std::integral_constant<bool,
-                                            is_forward_range<T>::value
-                                            >;
+    using is_range = std::integral_constant<
+        bool,
+        is_forward_range<T>::value
+        >;
+
+    template <class R>
+    RangeIterator<R> range_begin(const R& r)
+    { return RangeIterator<R>(r); }
+
+    template <class R>
+    RangeIterator<R> range_end(const R& r)
+    { return RangeIterator<R>(r); }
+    
 };
+
+namespace std
+{
+    template <class R,
+              class = std::enable_if_t<range::is_range<R>::value> >
+    range::RangeIterator<R> begin(const R& r)
+    { return range::range_begin(r); }
+
+    template <class R,
+              class = std::enable_if_t<range::is_range<R>::value> >
+    range::RangeIterator<R> end(const R& r)
+    { return range::range_end(r); }
+}
 
 
 #ifdef _BUILD_TEST

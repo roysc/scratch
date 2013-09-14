@@ -1,8 +1,9 @@
 #include <vector>
 #include <typeinfo>
+#include <cassert>
 
-#include "util.hh"
 #include "range.hh"
+#include "util.hh" // FIXME: this must be included after range.hh for << to work
 
 using namespace util::io;
 
@@ -15,6 +16,7 @@ int main()
                              nums, nums + N);
     println(pos);
 
+    
     std::vector<std::string> words = {
         "and", "a", "one", "and a", "two", "& a", "1 2 3"
     };
@@ -26,6 +28,10 @@ int main()
 
 
     // print(std::boolalpha);
-    
 
+    auto isr = range::is_range<decltype(pos)>::value;
+    assert(isr && "is_iterable<FilterRange>");
+
+    auto isi = util::is_iterable<decltype(pos)>::value;
+    assert(isi && "is_range<FilterRange>");
 }
