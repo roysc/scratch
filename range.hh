@@ -7,7 +7,29 @@
 
 namespace range
 {
-    template <class R>
+    template <class T>
+    struct is_forward_range
+    {
+        template <class T_ = std::decay_t<T>,
+                  class EltRef = decltype(std::declval<T_>().front()),
+                  class HasNext = decltype(std::declval<T_>().has_next()),
+                  class PopFront = decltype(std::declval<T_>().pop_front())>
+        static std::enable_if_t<
+            std::is_lvalue_reference<EltRef>::value &&
+            std::is_same<HasNext, bool>::value,
+            std::true_type> test(int);
+        static std::false_type test(...);
+        static const bool value = decltype(test(0))::value;
+    };
+
+    template <class T>
+    using is_range = std::integral_constant<
+        bool,
+        is_forward_range<T>::value
+        >;
+
+    template <class R,
+              class = std::enable_if_t<is_range<R>::value> >
     struct RangeIterator : std::iterator<
         std::forward_iterator_tag,
         typename R::BaseTraits::value_type,
@@ -65,13 +87,21 @@ namespace range
         It m_cursor, m_end;
     };
 
+    template <class Predicate, class Rng>
+    FilterRange<Predicate, RangeIterator<Rng> >
+    filter(Predicate&& f, Rng r)
+    {
+        return FilterRange<Predicate, RangeIterator<Rng> >(
+            std::forward<Predicate>(f),
+            range_begin(r), range_end(r));
+    }
+    
     template <class Predicate, class It>
     FilterRange<Predicate, It>
     filter(Predicate&& f, It it, It end)
     {
         return FilterRange<Predicate, It>(
-            std::forward<Predicate>(f),
-            std::forward<It>(it), std::forward<It>(end));
+            std::forward<Predicate>(f), it, end);
     }
 
 
@@ -100,27 +130,6 @@ namespace range
     AsRange<It> as_range(It beg, It end)
     { return AsRange<It>(beg, end); }
 
-
-    template <class T>
-    struct is_forward_range
-    {
-        template <class T_ = std::decay_t<T>,
-                  class EltRef = decltype(std::declval<T_>().front()),
-                  class HasNext = decltype(std::declval<T_>().has_next()),
-                  class PopFront = decltype(std::declval<T_>().pop_front())>
-        static std::enable_if_t<
-            std::is_lvalue_reference<EltRef>::value &&
-            std::is_same<HasNext, bool>::value,
-            std::true_type> test(int);
-        static std::false_type test(...);
-        static const bool value = decltype(test(0))::value;
-    };
-
-    template <class T>
-    using is_range = std::integral_constant<
-        bool,
-        is_forward_range<T>::value
-        >;
 
     template <class R>
     RangeIterator<R> range_begin(const R& r)
