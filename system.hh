@@ -94,13 +94,12 @@ struct Logic
     }
 
     template <class Entities>
-    void run(Entities ents)
+    void run(Entities&& ents)
     {
         println("Running Logic");
         
         for (auto& ent : ents) {
-            println(ent);
-            
+
             util::swallow {(
                 assert(ent.template has_component<Components>()),
             0)...};
