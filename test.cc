@@ -1,9 +1,7 @@
 #include <string>
 #include <vector>
 #include <array>
-#include <iostream>
-#include <bitset>
-#include <functional>
+#include <string>
 
 #include <cassert>
 
@@ -33,7 +31,7 @@ struct Vec2 : public BasicComponent
 #define EXTEND_Vec2(DerivedName)                            \
     struct DerivedName : public Vec2                        \
     {                                                       \
-        static std::string name() { return #DerivedName; }  \
+        static std::string name() { return #DerivedName; }   \
         std::string to_string() const                       \
         {                                                   \
             std::stringstream out;                          \
@@ -72,37 +70,47 @@ struct Motion2 : public Logic<Velocity, Acceleration>
 
     
 int main(int argc, char *argv[]) {
-    
+
+    int n_updates = argc > 1
+        ? std::stoi(argv[1])
+        : 10,
+        n_entities = 1;
+
     using Space = EntitySpace<Position, Velocity, Acceleration>;
     // Space space;
     
-    using System = System<Space, Motion, Motion2>;
+    using System = System<Space, Motion2, Motion>;
     System sys;
 
-    std::vector<EntityID> p, v, pv, pva;
+    std::vector<EntityID> ents;
 
-    for (int i = 0; i < 5; ++i) {
-        // p.push_back(sys.template create_entity<Position>());
-        p.push_back(sys.create_entity(Position (1,1)));
-        // v.push_back(sys.template create_entity<Velocity>());
+    for (int i = 0; i < n_entities; ++i)
+    {
+        ents.push_back(sys.template create_entity<Position>());
+        ents.push_back(sys.create_entity(Position (1,1)));
+        ents.push_back(sys.template create_entity<Velocity>());
+        // va.push_back(sys.create_entity(Velocity()));
         // pv.push_back(sys.template create_entity<Position, Velocity>());
-        pva.push_back(sys.create_entity(
+        ents.push_back(sys.create_entity(
                           Position(),
                           Velocity(1,-1)));
-        pva.push_back(sys.create_entity(
+        ents.push_back(sys.create_entity(
                           Position(),
                           Velocity(),
                           Acceleration(-1, 1)));
-        // va.push_back(sys.create_entity(Velocity()))
     }
     
     // for (auto ent : v) println(sys.space[ent]);
-    
-    for (auto ent : pva) println(sys.space[ent]);
 
-    for (int i = 0; i < 10; ++i) sys.update();
-    
-    for (auto ent : pva) println(sys.space[ent]);
+    println("  initial:");
+    for (auto ent : ents)
+        println("#", ent, ": ", sys.space[ent]);
+
+    for (int i = 0; i < n_updates; ++i) sys.update();
+
+    println("  after ", n_updates, " updates:");
+    for (auto ent : ents) 
+        println("#", ent, ": ", sys.space[ent]);
 
     // game.enqueue(
     //     CSpace::Spawn<RandomInput>(1),
