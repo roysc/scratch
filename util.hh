@@ -250,6 +250,9 @@ namespace util
 
 
         template <class T>
+        using is_char = is_member<T, char, wchar_t, char16_t, char32_t>;
+
+        template <class T>
         struct is_string
         {
             template <class T_ = std::decay_t<T>,
@@ -257,6 +260,7 @@ namespace util
                           decltype(std::begin(std::declval<T_>()))
                           >::value_type>
             static std::enable_if_t<
+                is_char<Val>::value &&
                 std::is_same<T_, std::basic_string<Val> >::value,
                 std::true_type> test(int);
             static std::false_type test(...);
@@ -270,11 +274,17 @@ namespace util
                       !is_string<C>::value> >
         std::ostream& operator<<(std::ostream& out, const C& c)
         {
+            using Elt = typename std::iterator_traits<
+                decltype(std::begin(c))>::value_type;
+            
             out << '[';
             bool first = true;
             for (auto it = std::begin(c); it != std::end(c); ++it) {
                 if (!first) out << ", ";
-                out << *it;
+                auto quote = is_char<Elt>::value
+                    ? "'" : is_string<Elt>::value
+                    ? "\"" : "";
+                print_to(out, quote, *it, quote);
                 first = false;
             }
             out << ']';
