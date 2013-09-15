@@ -13,21 +13,6 @@ namespace range
 }
 
 
-namespace std
-{
-    template <class R,
-              class = std::enable_if_t<range::is_range<R>::value> >
-    range::RangeIterator<R> begin(const R& r)
-    { return range::begin(r); }
-
-    template <class R,
-              class = std::enable_if_t<range::is_range<R>::value> >
-    range::RangeIterator<R> end(const R& r)
-    { return range::end(r); }
-}
-
-
-
 #ifdef _BUILD_TEST
 
 using namespace range;

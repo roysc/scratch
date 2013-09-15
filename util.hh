@@ -8,6 +8,7 @@
 
 #include "util/common.hh"
 #include "util/traits.hh"
+#include "util/traits_impl.hh"
 #include "util/mp.hh"
 #include "util/io.hh"
 

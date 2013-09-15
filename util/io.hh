@@ -2,8 +2,8 @@
 #include <iostream>
 #include <string>
 
-
 #include "util/common.hh"
+#include "util/traits.hh"
 #include "util/mp.hh"
 
 #ifndef _SCRATCH_UTIL_IO
@@ -57,7 +57,7 @@ namespace util
                           >::value_type>
             static std::enable_if_t<
                 is_char<Val>::value &&
-            std::is_same<T_, std::basic_string<Val> >::value,
+                std::is_same<T_, std::basic_string<Val> >::value,
                 std::true_type> test(int);
             static std::false_type test(...);
             static const bool value = decltype(test(0))::value;
@@ -68,7 +68,7 @@ namespace util
                   class = std::enable_if_t<
                       is_iterable<C>::value &&
                       !is_string<C>::value> >
-                                std::ostream& operator<<(std::ostream& out, const C& c)
+        std::ostream& operator<<(std::ostream& out, const C& c)
         {
             using Elt = typename std::iterator_traits<
                 decltype(std::begin(c))>::value_type;

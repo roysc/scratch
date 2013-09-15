@@ -1,38 +1,41 @@
 #include <iterator>
 
+#include "cxx14.hh"
+#include "util/traits.hh"
+
 #ifndef _SCRATCH_RANGE_ADAPT
 #define _SCRATCH_RANGE_ADAPT
 
 namespace range
 {
-  namespace adapt
-  {
-    
+namespace adapt
+{
+
     template <class It>
     struct AsRange
     {
-      using BaseTraits = typename std::iterator_traits<It>;
-      using ElementType = typename BaseTraits::value_type;
-      using Reference = ElementType&;
+        using BaseTraits = typename std::iterator_traits<It>;
+        using ElementType = typename BaseTraits::value_type;
+        using Reference = ElementType&;
 
-      AsRange(It beg, It end)
-          : m_cursor(beg), m_end(end)
+        AsRange(It beg, It end)
+            : m_cursor(beg), m_end(end)
         { }
 
-      // template <class C,
-      //           class = std::enable_if_t<util::is_iterable<C>::value> >
-      // AsRange(const C& c)
-      //     : AsRange(std::begin(c), std::end(c))
-      // { }
-        
-      Reference front() const { return *m_cursor; }
-      void pop_front() { ++m_cursor; }
-      bool has_next() const { return m_cursor != m_end; }
-        
-      private:
-      It m_cursor, m_end;
-    };
+        template <class C,
+                  class = std::enable_if_t<util::is_iterable<C>::value> >
+        AsRange(const C& c)
+            : AsRange(std::begin(c), std::end(c))
+        { }
     
+        Reference front() const { return *m_cursor; }
+        void pop_front() { ++m_cursor; }
+        bool has_next() const { return m_cursor != m_end; }
+    
+      private:
+        It m_cursor, m_end;
+    };
+
     template <class It>
     AsRange<It> as_range(It beg, It end)
     { return AsRange<It>(beg, end); }
@@ -50,7 +53,7 @@ namespace range
         RangeIterator(const R& r)
             : m_range(r)
         { }
-            
+        
         typename R::BaseTraits::reference
         operator*() const { return m_range.front(); }
 
@@ -63,17 +66,36 @@ namespace range
       private:
         R m_range;
     };
-
-    template <class R>
-    RangeIterator<R> begin(const R& r)
-    { return RangeIterator<R>(r); }
-
-    template <class R>
-    RangeIterator<R> end(const R& r)
-    { return RangeIterator<R>(r); }
-  }
-
-  using namespace adapt;
 }
+
+    using namespace adapt;
+
+    namespace iter
+    {
+        template <class R>
+        RangeIterator<R> begin(const R& r)
+        { return RangeIterator<R>(r); }
+
+        template <class R>
+        RangeIterator<R> end(const R& r)
+        { return RangeIterator<R>(r); }
+    }
+
+    using namespace iter;
+}
+
+namespace std
+{
+    template <class R,
+              class = std::enable_if_t<range::is_range<R>::value> >
+    range::RangeIterator<R> begin(const R& r)
+    { return range::begin(r); }
+
+    template <class R,
+              class = std::enable_if_t<range::is_range<R>::value> >
+    range::RangeIterator<R> end(const R& r)
+    { return range::end(r); }
+}
+
 
 #endif
