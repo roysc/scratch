@@ -18,7 +18,7 @@
             std::true_type>::type test(int); \
         static std::false_type test(...);                               \
         static const bool value = decltype(test(0))::value;             \
-    };
+    }
 
 #define CREATE_MEMBER_TEST(symbol)                               \
     template <class T, class U>                                         \
@@ -31,7 +31,7 @@
             std::true_type>::type test(int); \
         static std::false_type test(...);                               \
         static const bool value = decltype(test(0))::value;             \
-    };
+    }
 
 #define CREATE_MEMBER_FUNCTION_TEST(symbol)                             \
     template <class T, class Ret, class... Args>                        \
@@ -46,7 +46,7 @@
 		std::true_type>::type test(int); \
     static std::false_type test(...);                                   \
     static const bool value = decltype(test(0))::value;                 \
-};
+}
 
 
 #ifdef _BUILD_TEST

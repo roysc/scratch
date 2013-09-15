@@ -96,7 +96,7 @@ struct Logic
     template <class Entities>
     void run(Entities&& ents)
     {
-        println("Running Logic");
+        // println("Running Logic");
         
         for (auto& ent : ents) {
 

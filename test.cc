@@ -28,41 +28,25 @@ struct Vec2 : public BasicComponent
     
     using InputType = Array;
 
-    // std::string to_string() const
-    // {
-    //     std::stringstream out;
-    //     print_to(out, name(), "(", x, ", ", y, ")");
-    //     return out.str();
-    // }
 };
 
-
-struct Position : public Vec2
-{
-    static std::string name() { return "Position"; }
-    std::string to_string() const
-    {
-        std::stringstream out;
-        print_to(out, "Position(", x, ", ", y, ")");
-        return out.str();
+#define EXTEND_Vec2(DerivedName)                            \
+    struct DerivedName : public Vec2                        \
+    {                                                       \
+        static std::string name() { return #DerivedName; }  \
+        std::string to_string() const                       \
+        {                                                   \
+            std::stringstream out;                          \
+            print_to(out, #DerivedName "(", x, ", ", y, ")");    \
+            return out.str();                               \
+        }                                                   \
+                                                            \
+        using Vec2::Vec2;                                   \
     }
 
-    using Vec2::Vec2;
-};
-
-
-struct Velocity : public Vec2
-{
-    static std::string name() { return "Velocity"; }
-    std::string to_string() const
-    {
-        std::stringstream out;
-        print_to(out, "Velocity(", x, ", ", y, ")");
-        return out.str();
-    }
-
-    using Vec2::Vec2;
-};
+EXTEND_Vec2(Position);
+EXTEND_Vec2(Velocity);
+EXTEND_Vec2(Acceleration);
 
 struct Motion : public Logic<Position, Velocity>
 {
@@ -70,40 +54,55 @@ struct Motion : public Logic<Position, Velocity>
     {
         // Logic<Position, Velocity>::operate(p, v);
             
-        println("Motion operating on (", p, ", ", v, ")");
+        // println("Motion operating on (", p, ", ", v, ")");
         p.x += v.x;
         p.y += v.y;
+    }
+};
+
+struct Motion2 : public Logic<Velocity, Acceleration>
+{
+    void operate(Velocity& v, Acceleration& a)
+    {
+        // println("Motion operating on (", p, ", ", v, ")");
+        v.x += a.x;
+        v.y += a.y;
     }
 };
 
     
 int main(int argc, char *argv[]) {
     
-    using Space = EntitySpace<Position, Velocity>;
+    using Space = EntitySpace<Position, Velocity, Acceleration>;
     // Space space;
     
-    using System = System<Space, Motion>;
+    using System = System<Space, Motion, Motion2>;
     System sys;
 
-    std::vector<EntityID> entsp, entsv, entspv;
+    std::vector<EntityID> p, v, pv, pva;
 
-    for (int i = 0; i < 5; i++) {
-        // entsp.push_back(sys.template create_entity<Position>());
-        entsp.push_back(sys.create_entity(Position (1,1)));
-        // entsv.push_back(sys.template create_entity<Velocity>());
-        // entspv.push_back(sys.template create_entity<Position, Velocity>());
-        entspv.push_back(sys.create_entity(
-                             Position(), Velocity(1, -1)));
+    for (int i = 0; i < 5; ++i) {
+        // p.push_back(sys.template create_entity<Position>());
+        p.push_back(sys.create_entity(Position (1,1)));
+        // v.push_back(sys.template create_entity<Velocity>());
+        // pv.push_back(sys.template create_entity<Position, Velocity>());
+        pva.push_back(sys.create_entity(
+                          Position(),
+                          Velocity(1,-1)));
+        pva.push_back(sys.create_entity(
+                          Position(),
+                          Velocity(),
+                          Acceleration(-1, 1)));
+        // va.push_back(sys.create_entity(Velocity()))
     }
     
-    // for (auto ent : entsp) println(sys.space[ent]);
-    // for (auto ent : entsv) println(sys.space[ent]);
+    // for (auto ent : v) println(sys.space[ent]);
     
-    for (auto ent : entspv) println(sys.space[ent]);
+    for (auto ent : pva) println(sys.space[ent]);
 
-    sys.update();
+    for (int i = 0; i < 10; ++i) sys.update();
     
-    for (auto ent : entspv) println(sys.space[ent]);
+    for (auto ent : pva) println(sys.space[ent]);
 
     // game.enqueue(
     //     CSpace::Spawn<RandomInput>(1),
