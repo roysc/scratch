@@ -6,6 +6,7 @@
 #include "util.hh" // FIXME: this must be included after range.hh for << to work
 
 using namespace util::io;
+using namespace range;
 
 int main()
 {
@@ -16,6 +17,8 @@ int main()
                              nums, nums + N);
     println(pos);
 
+    auto numsr = as_range(nums, nums + N);
+    println(filter([] (int x) { return 0 < x; }, numsr));
     
     std::vector<std::string> words = {
         "and", "a", "one", "and a", "two", "& a", "1 2 3"

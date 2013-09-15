@@ -46,7 +46,7 @@ namespace range
 
         RangeIterator& operator++() { m_range.pop_front(); }
 
-        bool operator!=(const RangeIterator& that)
+        bool operator!=(const RangeIterator& that) const
         { return m_range.has_next(); }
 
       private:
@@ -63,7 +63,9 @@ namespace range
 
         FilterRange(const Predicate& f, const It& it, const It& end)
             : m_pred(f), m_cursor(it), m_end(end)
-        { }
+        {
+            satisfy_predicate();
+        }
         
         Reference front() const { return *m_cursor; }
 
@@ -87,11 +89,11 @@ namespace range
         It m_cursor, m_end;
     };
 
-    template <class Predicate, class Rng>
-    FilterRange<Predicate, RangeIterator<Rng> >
-    filter(Predicate&& f, Rng r)
+    template <class Predicate, class R>
+    FilterRange<Predicate, RangeIterator<R> >
+    filter(Predicate&& f, const R& r)
     {
-        return FilterRange<Predicate, RangeIterator<Rng> >(
+        return FilterRange<Predicate, RangeIterator<R> >(
             std::forward<Predicate>(f),
             range_begin(r), range_end(r));
     }
