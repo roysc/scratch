@@ -21,7 +21,7 @@ using Ref = typename
     // std::shared_ptr<Cpt>;
     std::unique_ptr<Cpt>;
 
-using EntityID = ulong;
+using EntityID = uint;
 
 /**** Entity ****
  *  Anything that "exists" within the system 

@@ -28,6 +28,14 @@ namespace util
         std::ostream& println(Args&&... args)
         { return print(std::forward<Args>(args)..., '\n'); }
 
+        template <class... Args>
+        std::string text(Args&&... args)
+        {
+            std::stringstream buf;
+            print_to(buf, std::forward<Args>(args)...);
+            return buf.str();
+        }
+
         
         template <class Tuple, size_t... Is>
         void _print_tuple(std::ostream& out, const Tuple& t, indices<Is...>)
@@ -42,7 +50,10 @@ namespace util
         template <class... Ts>
         std::ostream& operator<<(std::ostream& out,
                                  const std::tuple<Ts...>& t)
-        { _print_tuple(out, t, indices_for<std::tuple<Ts...> > {}); }
+        {
+            _print_tuple(out, t, indices_for<std::tuple<Ts...> > {});
+            return out;
+        }
 
 
         template <class T>

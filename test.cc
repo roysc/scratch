@@ -1,7 +1,6 @@
 #include <string>
 #include <vector>
 #include <array>
-#include <string>
 
 #include <cassert>
 
@@ -28,18 +27,18 @@ struct Vec2 : public BasicComponent
 
 };
 
-#define EXTEND_Vec2(DerivedName)                            \
-    struct DerivedName : public Vec2                        \
-    {                                                       \
-        static std::string name() { return #DerivedName; }   \
-        std::string to_string() const                       \
-        {                                                   \
-            std::stringstream out;                          \
+#define EXTEND_Vec2(DerivedName)                                 \
+    struct DerivedName : public Vec2                             \
+    {                                                            \
+        static std::string name() { return #DerivedName; }       \
+        std::string to_string() const                            \
+        {                                                        \
+            std::stringstream out;                               \
             print_to(out, #DerivedName "(", x, ", ", y, ")");    \
-            return out.str();                               \
-        }                                                   \
-                                                            \
-        using Vec2::Vec2;                                   \
+            return out.str();                                    \
+        }                                                        \
+                                                                 \
+        using Vec2::Vec2;                                        \
     }
 
 EXTEND_Vec2(Position);
@@ -69,12 +68,10 @@ struct Motion2 : public Logic<Velocity, Acceleration>
 };
 
     
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 
-    int n_updates = argc > 1
-        ? std::stoi(argv[1])
-        : 10,
-        n_entities = 1;
+    int n_updates = argc > 1 ? std::stoi(argv[1]) : 10,
+        n_entities = argc > 2 ? std::stoi(argv[2]) : 1;
 
     using Space = EntitySpace<Position, Velocity, Acceleration>;
     // Space space;
@@ -84,8 +81,7 @@ int main(int argc, char *argv[]) {
 
     std::vector<EntityID> ents;
 
-    for (int i = 0; i < n_entities; ++i)
-    {
+    for (int i = 0; i < n_entities; ++i) {
         ents.push_back(sys.template create_entity<Position>());
         ents.push_back(sys.create_entity(Position (1,1)));
         ents.push_back(sys.template create_entity<Velocity>());
@@ -102,15 +98,15 @@ int main(int argc, char *argv[]) {
     
     // for (auto ent : v) println(sys.space[ent]);
 
-    println("  initial:");
-    for (auto ent : ents)
-        println("#", ent, ": ", sys.space[ent]);
+    auto show = [&] (std::string s) {
+        println(s);
+        for (auto ent : ents)
+            println("@", ent, ": ", sys.space[ent]);
+    };
 
+    show("  initial:");
     for (int i = 0; i < n_updates; ++i) sys.update();
-
-    println("  after ", n_updates, " updates:");
-    for (auto ent : ents) 
-        println("#", ent, ": ", sys.space[ent]);
+    show(text("  after ", n_updates, " updates:"));
 
     // game.enqueue(
     //     CSpace::Spawn<RandomInput>(1),
