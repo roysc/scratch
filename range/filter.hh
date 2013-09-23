@@ -3,12 +3,15 @@
 
 namespace range
 {
+    /** Lazily yields elements of an underlying range which satisfy a 
+        predicate. */
     template <class Predicate, class R>
     struct FilterRange
     {
         using BaseTraits = typename R::BaseTraits;
         using ElementType = typename BaseTraits::value_type;
-        using Reference = ElementType&;
+        // using Reference = ElementType&;
+        using Reference = typename BaseTraits::reference;
 
         template <class = std::enable_if_t<is_range<R>::value> >
         FilterRange(const Predicate& f, const R& r)

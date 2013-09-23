@@ -16,16 +16,10 @@ namespace adapt
     {
         using BaseTraits = typename std::iterator_traits<It>;
         using ElementType = typename BaseTraits::value_type;
-        using Reference = ElementType&;
+        using Reference = typename BaseTraits::reference;
 
         AsRange(It beg, It end)
             : m_cursor(beg), m_end(end)
-        { }
-
-        template <class C,
-                  class = std::enable_if_t<util::is_iterable<C>::value> >
-        AsRange(const C& c)
-            : AsRange(std::begin(c), std::end(c))
         { }
     
         Reference front() const { return *m_cursor; }
@@ -40,6 +34,11 @@ namespace adapt
     AsRange<It> as_range(It beg, It end)
     { return AsRange<It>(beg, end); }
 
+    template <class C,
+              class = std::enable_if_t<util::is_iterable<C>::value> >
+    auto as_range(const C& c) // -> AsRange<decltype(std::begin(c))>
+    { return AsRange<decltype(std::begin(c))>(std::begin(c), std::end(c)); }
+    
 
     template <class R,
               class = std::enable_if_t<is_range<R>::value> >
@@ -54,7 +53,7 @@ namespace adapt
             : m_range(r)
         { }
         
-        typename R::BaseTraits::reference
+        typename R::Reference //::BaseTraits::reference
         operator*() const { return m_range.front(); }
 
         RangeIterator& operator++()

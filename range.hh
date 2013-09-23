@@ -3,6 +3,7 @@
 #include "range/traits.hh"
 #include "range/adapt.hh"
 #include "range/filter.hh"
+#include "range/map.hh"
 
 #ifndef _SCRATCH_RANGE
 #define _SCRATCH_RANGE

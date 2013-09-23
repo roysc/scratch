@@ -19,8 +19,8 @@ namespace traits
                   class HasNext = decltype(std::declval<T_>().has_next()),
                   class PopFront = decltype(std::declval<T_>().pop_front())>
         static std::enable_if_t<
-            std::is_lvalue_reference<EltRef>::value &&
-        std::is_same<HasNext, bool>::value,
+            // std::is_lvalue_reference<EltRef>::value &&
+            std::is_same<HasNext, bool>::value,
             std::true_type> test(int);
         static std::false_type test(...);
         static const bool value = decltype(test(0))::value;
