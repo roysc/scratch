@@ -1,26 +1,20 @@
-#include <tuple>
-#include <type_traits>
-#include <initializer_list>
-#include <iterator>
+// #include <tuple>
+// #include <type_traits>
+// #include <initializer_list>
+// #include <iterator>
 
 #include "cxx14.hh"
 #include "sfinae.hh"
-
-#include "util/common.hh"
-#include "util/traits.hh"
-#include "util/traits_impl.hh"
-#include "util/mp.hh"
-#include "util/io.hh"
+#include "common.hh"
+#include "traits.hh"
+#include "traits_impl.hh"
+#include "mp.hh"
+#include "io.hh"
 
 #ifndef _SCRATCH_UTIL
 #define _SCRATCH_UTIL
 
-namespace util
-{
-    
-}
-
-#ifdef _BUILD_TEST
+#ifdef BUILD_TEST
 
 int fn1(int) { return 1; }
 void fn2() {}
