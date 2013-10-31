@@ -1,8 +1,10 @@
+#ifndef UTIL_RANGE_COMMON_HH
+#define UTIL_RANGE_COMMON_HH
 
-#ifndef _SCRATCH_RANGE_COMMON
-#define _SCRATCH_RANGE_COMMON
+namespace range {
 
+struct BasicRange {};
 
-
+}
 
 #endif

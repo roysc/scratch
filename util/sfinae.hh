@@ -1,7 +1,12 @@
-#include <type_traits>
+/****************************************
+ ** \file       util/sfinae.hh
+ ** \brief      SFINAE class macros
+ **/
 
-#ifndef _SCRATCH_SFINAE
-#define _SCRATCH_SFINAE
+#ifndef SFINAE_HH
+#define SFINAE_HH
+
+#include <type_traits>
 
 #define CREATE_FUNCTION_TEST(symbol)                                    \
     template <class Ret, class... Args>                                 \
@@ -49,7 +54,7 @@
 }
 
 
-#ifdef _BUILD_TEST
+#ifdef BUILD_TEST
 
 struct FooX { char name(); int add(int);};
 struct FooY { static char name; };
@@ -71,4 +76,3 @@ static_assert(!detect_mem_fn_name<FooZ, char>::value, "");
 #endif
 
 #endif
-

@@ -1,11 +1,14 @@
-/**
- * \brief Meta-programming utilities
- */
+/****************************************
+ ** \file       util/mp.hh
+ ** \brief      Meta-programming utilities
+ **/
+
+#ifndef UTIL_MP_HH
+#define UTIL_MP_HH
+
+#include <tuple>                // for std::get
 
 #include "common.hh"
-
-#ifndef SCRATCH_UTIL_MP_HH
-#define SCRATCH_UTIL_MP_HH
 
 namespace util {
 namespace mp {
@@ -66,21 +69,6 @@ struct index_of<T, U, Ts...>
 template <class T, template <class...> class Variadic, class... Ts>
 struct index_within<T, Variadic<Ts...> > : index_of<T, Ts...> {};
 
-
-// should perhaps go in C++14 std:: hacks
-template <class T, class... Ts>
-constexpr T& get(std::tuple<Ts...>& t)
-{ return std::get<index_of<T, Ts...>::value>(t); }
-
-template <class T, class... Ts>
-constexpr T&& get(std::tuple<Ts...>&& t)
-{ return std::forward<T&&>(get<T>(t)); }
-
-template <class T, class... Ts>
-constexpr const T& get(const std::tuple<Ts...>& t)
-{ return std::get<index_of<T, Ts...>::value>(t); }
-
-
     
 /** Type container */
 template <class... Ts>
@@ -99,7 +87,20 @@ struct TypeSet //: public TypeVector<Ts...>
   struct contains<TypeSet<Us...> > : all_satisfy<contains, Us...>
   {};
 };
-    
+
+// should perhaps go in C++14 std:: hacks
+template <class T, class... Ts>
+constexpr T& get(std::tuple<Ts...>& t)
+{ return std::get<index_of<T, Ts...>::value>(t); }
+
+template <class T, class... Ts>
+constexpr T&& get(std::tuple<Ts...>&& t)
+{ return std::forward<T&&>(get<T>(t)); }
+
+template <class T, class... Ts>
+constexpr const T& get(const std::tuple<Ts...>& t)
+{ return std::get<index_of<T, Ts...>::value>(t); }
+
 template <class Variadic>
 using variadic_size = std::tuple_size<Variadic>;
 

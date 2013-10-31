@@ -16,10 +16,7 @@ struct Vec2// : public BasicComponent
 {
     using Number = float;
     using Array = std::array<Number, 2>;
-    union {                                     
-        Array v;
-        struct { Number x, y; };                
-    };                                          
+    union { Array v; struct { Number x, y; }; };                                          
                                                 
     Vec2(Array a) : v(a) {}
     Vec2(Number _x, Number _y) : v {{_x, _y}} {}

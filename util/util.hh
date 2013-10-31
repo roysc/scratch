@@ -1,18 +1,14 @@
-// #include <tuple>
-// #include <type_traits>
-// #include <initializer_list>
-// #include <iterator>
+#ifndef UTIL_HH
+#define UTIL_HH
 
-#include "cxx14.hh"
+#include <type_traits>
+
+#include "std14_compat.hh"
 #include "sfinae.hh"
 #include "common.hh"
 #include "traits.hh"
-#include "traits_impl.hh"
 #include "mp.hh"
 #include "io.hh"
-
-#ifndef _SCRATCH_UTIL
-#define _SCRATCH_UTIL
 
 #ifdef BUILD_TEST
 

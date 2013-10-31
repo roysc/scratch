@@ -1,12 +1,9 @@
-// #include "range/traits.hh"
+#ifndef UTIL_TRAITS_IMPL_HH
+#define UTIL_TRAITS_IMPL_HH
 
-#ifndef _SCRATCH_UTIL_TRAITS_IMPL
-#define _SCRATCH_UTIL_TRAITS_IMPL
+namespace util {
+namespace traits {
 
-namespace util
-{
-namespace traits
-{
 template <template <class> class Pred>
 struct all_satisfy<Pred> : public std::true_type
 {};

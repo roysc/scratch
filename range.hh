@@ -1,26 +1,9 @@
+#ifndef UTIL_RANGE_HH
+#define UTIL_RANGE_HH
 
-#include "range/common.hh"
-#include "range/traits.hh"
-#include "range/adapt.hh"
-#include "range/filter.hh"
-#include "range/map.hh"
+#include "std14_compat.hh"
 
-#ifndef _SCRATCH_RANGE
-#define _SCRATCH_RANGE
-
-namespace range
-{
-    
-}
-
-
-#ifdef _BUILD_TEST
-
-using namespace range;
-
-struct P { bool operator()(int x) { return x > 0; } };
-static_assert(is_forward_range<FilterRange<P, AsRange<int*> > >::value, "");
-
-#endif
+#include "traits.hh"
+#include "range/all.hh"
 
 #endif
