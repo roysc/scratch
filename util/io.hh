@@ -12,51 +12,13 @@
 
 #include <boost/format.hpp>     // oof
 
+#include "sfinae.hh"
 #include "common.hh"
 #include "traits.hh"
 #include "mp.hh"
 
 namespace util {
 namespace io {
-
-template <class CharT, class Traits, class... Args>
-std::basic_ostream<CharT, Traits>&
-print_to(std::basic_ostream<CharT, Traits>& out, Args&&... args)
-{
-  swallow {(out << std::forward<Args>(args), 0)...};
-  return out;
-}
-
-// TODO convert encoding
-
-// template <class CharT, class Traits, class... Args>
-// std::basic_ostream<CharT, Traits>&
-// print(Args&&... args)
-// { return print_to(std::cout, std::forward<Args>(args)...); }
-
-// template <class CharT, class Traits, class... Args>
-// std::basic_ostream<CharT, Traits>&
-// println(Args&&... args)
-// { return print(std::forward<Args>(args)..., '\n'); }
-
-template <class... Args>
-std::ostream&
-print(Args&&... args)
-{ return print_to(std::cout, std::forward<Args>(args)...); }
-
-template <class... Args>
-std::ostream&
-println(Args&&... args)
-{ return print(std::forward<Args>(args)..., '\n'); }
-
-template <class CharT, class Traits, class... Args>
-std::basic_string<CharT, Traits>
-text(Args&&... args)
-{
-  std::basic_stringstream<CharT, Traits> buf;
-  print_to(buf, std::forward<Args>(args)...);
-  return buf.str();
-}
 
 template <class CharT, class Traits, class... Args>
 std::basic_string<CharT, Traits>
@@ -66,8 +28,6 @@ format(std::basic_string<CharT, Traits> spec, Args&&... args)
   swallow {(fmt = fmt % args, 0)...};
   return fmt.str();
 }
-
-namespace show {
 
 template <class T>
 using is_char = is_member<T, char, wchar_t, char16_t, char32_t>;
@@ -147,13 +107,51 @@ std::basic_ostream<CharT, Traits>& operator<<(std::basic_ostream<CharT, Traits>&
 { return out << to_string(a); }
 
 
+
+
+template <class CharT, class Traits, class... Args>
+std::basic_ostream<CharT, Traits>&
+print_to(std::basic_ostream<CharT, Traits>& out, Args&&... args)
+{
+  swallow {(out << std::forward<Args>(args), 0)...};
+  return out;
 }
+
+// TODO convert encoding
+
+// template <class CharT, class Traits, class... Args>
+// std::basic_ostream<CharT, Traits>&
+// print(Args&&... args)
+// { return print_to(std::cout, std::forward<Args>(args)...); }
+
+// template <class CharT, class Traits, class... Args>
+// std::basic_ostream<CharT, Traits>&
+// println(Args&&... args)
+// { return print(std::forward<Args>(args)..., '\n'); }
+
+template <class... Args>
+std::ostream&
+print(Args&&... args)
+{ return print_to(std::cout, std::forward<Args>(args)...); }
+
+template <class... Args>
+std::ostream&
+println(Args&&... args)
+{ return print(std::forward<Args>(args)..., '\n'); }
+
+template <class CharT, class Traits, class... Args>
+std::basic_string<CharT, Traits>
+text(Args&&... args)
+{
+  std::basic_stringstream<CharT, Traits> buf;
+  print_to(buf, std::forward<Args>(args)...);
+  return buf.str();
+}
+
 }
 
 using namespace io;
 
 }
-
-using util::io::show::operator<<;
 
 #endif
