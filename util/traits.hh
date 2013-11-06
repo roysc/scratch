@@ -3,6 +3,7 @@
 
 #include <type_traits>
 #include <iterator>
+#include <tuple>
 
 #include "std14_compat.hh"
 
@@ -65,12 +66,13 @@ struct is_member<T, Variadic<Ts...> > : is_member<T, Ts...>
 template <class T>
 struct is_iterable
 {
-  template <class T_ = std::decay_t<T>,
+  template <class T_ = T,
             class B = decltype(std::begin(std::declval<T_>())),
             class E = decltype(std::end(std::declval<T_>()))>
-  static std::enable_if_t<
-    std::is_same<B, E>::value,
-    std::true_type> test(int);
+            // class NEq = decltype(std::declval<B>() != std::declval<E>()),
+            // class Deref = decltype(*std::declval<B>()),
+            // class Incr = decltype(++std::declval<B>())>
+  static std::true_type test(int);
   static std::false_type test(...);
   static const bool value = decltype(test(0))::value;
 };

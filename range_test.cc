@@ -45,7 +45,7 @@ main()
   auto isr = range::is_range<decltype(filt)>::value;
   assert(isr);
   
-  // std::cout << filt << '\n';
+  std::cout << filt << '\n';
   
   // util::println(filter(is_pos, nums, nums + N));
   // util::println(map(dub, filter(ispos, nums, nums + N)));

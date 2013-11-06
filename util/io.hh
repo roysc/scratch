@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iostream>
 #include <string>
+#include <iterator>
 
 #include <boost/format.hpp>     // oof
 
@@ -36,33 +37,22 @@ template <class T>
 struct is_string
 {
   template <class T_ = std::decay_t<T>,
-            class Val = typename std::iterator_traits<
-              decltype(std::begin(std::declval<T_>()))
-              >::value_type>
+            class Elem = std::decay_t<
+              typename std::iterator_traits<
+                decltype(std::begin(std::declval<T_>()))
+                >::value_type> > 
   static std::enable_if_t<
-    is_char<Val>::value &&
-  std::is_same<T_, std::basic_string<Val> >::value,
+    is_char<Elem>::value &
+    std::is_same<T_, std::basic_string<Elem> >::value,
     std::true_type> test(int);
   static std::false_type test(...);
   static const bool value = decltype(test(0))::value;
 };
 
-
-CREATE_MEMBER_FUNCTION_TEST(to_string);
-template <class T>
-using has_to_string = detect_mem_fn_to_string<
-  typename std::decay<T>::type, std::string>;
-
-template <class C, class CharT, class Traits,
-          class = std::enable_if_t<
-            traits::is_iterable<C>::value &
-            !is_string<C>::value> >
-std::basic_ostream<CharT, Traits>&
-operator<<(std::basic_ostream<CharT, Traits>& out, const C& c)
+template <class T, class CharT, class Traits>
+void
+print_iterable(std::basic_ostream<CharT, Traits>& out, const T& c)
 {
-  using Elt = typename std::iterator_traits<
-    decltype(std::begin(c))>::value_type;
-
   out << '[';
   bool first = true;
   for (auto it = std::begin(c); it != std::end(c); ++it)
@@ -72,13 +62,23 @@ operator<<(std::basic_ostream<CharT, Traits>& out, const C& c)
     first = false;
   }
   out << ']';
+}
 
+template <class C, class CharT, class Traits,
+          class = std::enable_if_t<
+            traits::is_iterable<C>::value &
+            !is_string<C>::value> >
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& out, const C& c)
+{
+  // using Elt = typename std::iterator_traits<decltype(std::begin(c))>::value_type;
+  print_iterable(out, c);
   return out;
 }
 
-template <class CharT, class Traits, class Tuple, size_t... Is>
+template <class CharT, class Traits, class Variadic, size_t... Is>
 void
-_print_tuple(std::basic_ostream<CharT, Traits>& out, const Tuple& t, mp::indices<Is...>)
+_print_variadic(std::basic_ostream<CharT, Traits>& out, const Variadic& t, mp::indices<Is...>)
 {
   out << '(';
   swallow {(
@@ -87,13 +87,18 @@ _print_tuple(std::basic_ostream<CharT, Traits>& out, const Tuple& t, mp::indices
   out << ')';
 }
 
-template <class CharT, class Traits, template <class...> class Variadic, class... Ts>
+template <class CharT, class Traits, class... Ts>
 std::basic_ostream<CharT, Traits>&
-operator<<(std::basic_ostream<CharT, Traits>& out, const Variadic<Ts...>& t)
+operator<<(std::basic_ostream<CharT, Traits>& out, const std::tuple<Ts...>& t)
 {
-  _print_tuple(out, t, util::mp::indices_of<Variadic<Ts...> > {});
+  _print_variadic(out, t, util::mp::indices_of<std::tuple<Ts...> > {});
   return out;
 }
+
+CREATE_MEMBER_FUNCTION_TEST(to_string);
+template <class T>
+using has_to_string = detect_mem_fn_to_string<
+  typename std::decay<T>::type, std::string>;
 
 template <class T,
           class = std::enable_if_t<has_to_string<T>::value> >
