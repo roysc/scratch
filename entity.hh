@@ -4,7 +4,7 @@
 #include <bitset>
 #include <cassert>
 
-#include "util.hh"
+#include "util/util.hh"
 #include "component.hh"
 
 #ifndef _SCRATCH_ENTITY

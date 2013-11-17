@@ -6,7 +6,7 @@
 
 #include <cassert>
 
-#include "util.hh"
+#include "util/util.hh"
 #include "entity_space.hh"
 #include "system.hh"
 

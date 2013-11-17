@@ -1,9 +1,10 @@
 #include <algorithm>
 #include <functional>
 
-#include "util.hh"
+#include "util/util.hh"
+#include "util/range.hh"
+
 #include "entity_space.hh"
-#include "range.hh"
 
 template <class Space, class... Laws>
 struct System
@@ -62,13 +63,11 @@ struct System
     void update()
     {
         BitMask mask;
-        auto supports =
-            [&] (const EntityType& ent) { return ent.supports(mask); };
+        auto supports = [&] (const EntityType& ent) { return ent.supports(mask); };
         
         util::swallow {(
             mask = get_mask<Laws>(),
-            get_law<Laws>().run(
-                range::filter(supports, space.begin(), space.end())),
+            get_law<Laws>().run(util::range::filter(supports, space.begin(), space.end())),
             
         0)...};
         

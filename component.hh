@@ -8,7 +8,7 @@
 #include <string>
 
 #include "common.hh"
-#include "util.hh"
+#include "util/util.hh"
 
 #ifndef _SCRATCH_COMPONENT
 #define _SCRATCH_COMPONENT

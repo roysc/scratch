@@ -1,7 +1,7 @@
 #include <vector>
 #include <memory>
 
-#include "util.hh"
+#include "util/util.hh"
 #include "entity.hh"
 
 #ifndef _SCRATCH_ENTITY_SPACE
