@@ -28,6 +28,10 @@ using neg = std::integral_constant<bool, !pred::value>;
 template <class>
 struct is_iterable;
 
+// Use universal references with a specific type
+template <class Target, class Ref>
+using univ_ref = std::enable_if_t<std::is_same<std::decay_t<Ref>, Target>::value, void>;
+
 ////////////////////////////////////////
 // Implementation
 
