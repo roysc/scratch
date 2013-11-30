@@ -2,7 +2,7 @@ CC		= g++
 
 # OPT     = -O3
 INCLUDE = -I./
-CFLAGS	= -g -std=c++11 $(OPT) -w -D_DEBUG $(INCLUDE)
+CFLAGS	= -g -std=c++11 $(OPT) -Wall -D_DEBUG $(INCLUDE)
 LFLAGS  = 
 # OBJ_FILES = 
 HEADERS = entity.hh component.hh entity_space.hh system.hh
@@ -20,7 +20,7 @@ test: $(HEADERS) test.cc
 
 
 test-%: %.hh
-	$(CC) $^ -o $@ $(CFLAGS) $(LFLAGS) -D_BUILD_TEST
+	$(CC) $^ -o $@ $(CFLAGS) $(LFLAGS) -DBUILD_TEST
 
 clean:
 	rm $(BIN) $(OBJ_FILES) *.gch

@@ -19,8 +19,8 @@ using namespace util::io;
 
 struct BasicComponent
 {
-    static std::string name() { return "BasicComponent"; }
-    std::string to_string() const { return name(); }
+  static std::string name() { return "BasicComponent"; }
+  std::string to_string() const { return name(); }
 };
 
 CREATE_MEMBER_FUNCTION_TEST(name);
@@ -29,13 +29,13 @@ using has_name = detect_mem_fn_name<T, std::string>;
 
 template <class T>
 std::enable_if_t<has_name<T>::value,
-                  std::string>
+                 std::string>
 name()
 { return T::name(); }
 
 template <class T>
 std::enable_if_t<!has_name<T>::value,
-                  std::string>
+                 std::string>
 name()
 { return typeid(T).name(); }
 

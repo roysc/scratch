@@ -18,36 +18,36 @@ using namespace util::io; // when not debugging, shouldn't have print stmts
 template <class... Components>
 struct EntitySpace
 {
-    using Index = util::TypeVector<Components...>;
-    using EntityType = Entity<Components...>;
-    using Entities = std::vector<EntityType>;
-    using Iterator = typename Entities::iterator;
-    using BitMask = typename EntityType::BitMask;
+  using Index = util::TypeVector<Components...>;
+  using EntityType = Entity<Components...>;
+  using Entities = std::vector<EntityType>;
+  using Iterator = typename Entities::iterator;
+  using BitMask = typename EntityType::BitMask;
 
-    static const size_t max_components = sizeof...(Components);
+  static const size_t max_components = sizeof...(Components);
     
-    // members
-    Entities m_entities;
+  // members
+  Entities m_entities;
     
-    EntityID insert(EntityType&& entity)
-    {
-        EntityID id = 0;
+  EntityID insert(EntityType&& entity)
+  {
+    EntityID id = 0;
 
-        auto it = m_entities.begin();
-        while (it != m_entities.end() &&
-               !it->is_empty())
-            ++it, ++id;
+    auto it = m_entities.begin();
+    while (it != m_entities.end() &&
+           !it->is_empty())
+      ++it, ++id;
 
-        m_entities.insert(it, std::move(entity));
+    m_entities.insert(it, std::move(entity));
         
-        return id;
-    }
+    return id;
+  }
     
-    EntityType& operator[](EntityID id)
-    { return m_entities[id]; }
+  EntityType& operator[](EntityID id)
+  { return m_entities[id]; }
 
-    Iterator begin() { return m_entities.begin(); }
-    Iterator end() { return m_entities.end(); }
+  Iterator begin() { return m_entities.begin(); }
+  Iterator end() { return m_entities.end(); }
 
 };
 
