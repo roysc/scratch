@@ -1,6 +1,7 @@
-##The "Scratch" engine.
+"Scratch"
+----
 
-An experimental game/simulation engine using an entity-component design. Also, an exercise in template metaprogramming.
+A game/simulation engine exercise using a template-specified entity-component design.
 
 The idea is to be able to specify components as type-parameters for an entity. To implement a component, an entity system just needs to include it in the template type-list:
 
